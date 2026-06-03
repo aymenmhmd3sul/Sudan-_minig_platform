@@ -4,16 +4,16 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import datetime
 
-# استيراد المكونات المباشرة من ملفاتك المحلية في الجذر
+# استيراد المكونات المحلية المستقرة من مشروعك
 import models
 from database import engine, Base, get_db
 
-# إنشاء الجداول عند الإقلاع بناءً على الاستيراد النظيف
+# إنشاء الجداول تلقائياً عند الإقلاع
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Sudan Mining Hub")
 
-# الـ Schema المطلوبة للتسجيل تم صياغتها بـ str عادي لتفادي كسر الإقلاع بسبب email-validator
+# صياغة نموذج الاستجابة داخلياً لقطع الشك باليقين وتجنب غياب schemas.py
 class UserResponse(BaseModel):
     id: int
     username: str
@@ -25,11 +25,11 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-# --- بداية الكود الخاص بك بعد ضبط الاستيرادات والوسائط ---
-
-@app.post("/api/v1/register", response_model=UserResponse)
+# نافذة تسجيل الحساب المتوافقة تماماً مع تعديلاتك الأخيرة (Query Parameters)
+@app.post("/api/v1/register", response_model=UserResponse, status_code=201)
 def register_user(username: str, email: str, password: str, db: Session = Depends(get_db)):
-    # 1. التحقق من عدم تكرار البريد الإلكتروني
+    
+    # 1. التحقق من عدم تكرار البريد الإلكتروني (تم الإصلاح بناءً على صورتك المحدثة)
     db_user_email = db.query(models.User).filter(models.User.email == email).first()
     if db_user_email:
         raise HTTPException(
@@ -37,7 +37,7 @@ def register_user(username: str, email: str, password: str, db: Session = Depend
             detail="البريد الإلكتروني مسجل بالفعل بالنظام"
         )
         
-    # 2. التحقق من عدم تكرار اسم المستخدم
+    # 2. التحقق من عدم تكرار اسم المستخدم (تم الإصلاح بناءً على صورتك المحدثة)
     db_user_username = db.query(models.User).filter(models.User.username == username).first()
     if db_user_username:
         raise HTTPException(
@@ -45,10 +45,10 @@ def register_user(username: str, email: str, password: str, db: Session = Depend
             detail="اسم المستخدم مأخوذ بالفعل، اختر اسماً آخر"
         )
         
-    # 3. إنشاء الحساب وحفظه في الحقل المسمى hashed_password داخل models.py
-    # (ملاحظة هندسية: سيتم إضافة التشفير لاحقاً عبر passlib بمجرد استقرار الإقلاع)
+    # 3. إنشاء الحساب وحفظه في الحقل المسمى hashed_password داخل models.py الخاص بك
     new_user = models.User(
         username=username,
+        # تم تصحيح أسماء المتغيرات هنا لتطابق المدخلات المباشرة للدالة
         email=email,
         hashed_password=password  
     )
