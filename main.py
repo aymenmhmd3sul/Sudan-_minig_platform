@@ -4,11 +4,13 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+
+# استيراد محلي آمن لحل مشكلة الإقلاع
 import models
+import database
 from database import engine, get_db
 
-# إعدادات التشفير ومفاتيح الأمان
-SECRET_KEY = "SUDAN_MINING_SUPER_SECRET_KEY_2026" # مفتاح لتوقيع الـ Tokens
+SECRET_KEY = "SUDAN_MINING_SUPER_SECRET_KEY_2026"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -20,14 +22,12 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Sudan Mining Hub API")
 
-# الدالة المساعدة لإنشاء توكن الأمان (JWT)
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# الدالة المساعدة للتحقق من هوية المستخدم الحالي عبر التوكن
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -50,8 +50,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 def read_root():
     return {"status": "running", "database": "connected"}
 
-
-# --- النافذة 1: تسجيل حساب جديد ---
+# 1. التسجيل
 @app.post("/api/v1/register", status_code=status.HTTP_201_CREATED)
 def register(username: str, email: str, password: str, db: Session = Depends(get_db)):
     if db.query(models.User).filter(models.User.email == email).first():
@@ -66,8 +65,7 @@ def register(username: str, email: str, password: str, db: Session = Depends(get
     db.refresh(new_user)
     return {"message": "User created successfully", "user_id": new_user.id}
 
-
-# --- النافذة 2: تسجيل الدخول والحصول على التوكن (Login) ---
+# 2. تسجيل الدخول
 @app.post("/api/v1/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
@@ -77,8 +75,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
-
-# --- 3 النافذة : استعراض الملف الشخصي (Profile) ---
+# 3. الملف الشخصي
 @app.get("/api/v1/profile")
 def get_profile(current_user: models.User = Depends(get_current_user)):
     return {
@@ -89,11 +86,9 @@ def get_profile(current_user: models.User = Depends(get_current_user)):
         "created_at": current_user.created_at
     }
 
-
-# --- النافذة 4: تحديث الصلاحيات والأدوار (Update Role) ---
+# 4. الصلاحيات
 @app.put("/api/v1/update-role")
 def update_user_role(target_username: str, new_role: str, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    # حماية المسار: لا يسمح بتغيير الأدوار إلا لمن رتبته admin
     if current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to change roles")
     
