@@ -1,43 +1,21 @@
-import os
-from fastapi import FastAPI, Depends, HTTPException, status
+from typing import List
+from fastapi import FastAPI, HTTPException, Depends
+from sqlmodel import SQLModel, Session, select
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional
 
-# --- إعدادات قاعدة البيانات الذكية ---
-# التحقق من وجود قاعدة بيانات سحابية (Render) وإلا التحول تلقائياً إلى SQLite محلية
-DATABASE_URL = os.getenv("DATABASE_URL")
+# استيراد محرك الاتصال والجلسة من ملف الـ database
+from database import engine, get_session
+# استيراد الموديلات الهيكلية الفتحية من ملف الـ models
+from models import MiningSite, Equipment
 
-if DATABASE_URL:
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    from sqlalchemy import create_engine
-    from sqlalchemy.ext.declarative import declarative_base
-    from sqlalchemy.orm import sessionmaker
-    
-    engine = create_engine(DATABASE_URL)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base = declarative_base()
-    
-    # محاولة إنشاء الجداول في السحاب
-    try:
-        import models
-        from database import engine as db_engine
-        models.Base.metadata.create_all(bind=db_engine)
-    except Exception as e:
-        print(f"قاعدة البيانات السحابية مهيأة أو واجهت تنبيهاً: {e}")
-else:
-    # بيئة التطوير المحلية (SQLite) لضمان عدم توقف السيرفر على الهاتف
-    from sqlalchemy import create_engine
-    from sqlalchemy.ext.declarative import declarative_base
-    from sqlalchemy.orm import sessionmaker
-    
-    engine = create_engine("sqlite:///./local_sub_hub.db", connect_args={"check_same_thread": False})
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base = declarative_base()
+# إعداد التطبيق والواجهات الأساسية
+app = FastAPI(
+    title="Sudan Mining Hub - منصة تعدين السودان الرقمية",
+    description="البنية الخلفية المستقرة والمربوطة بقاعدة البيانات السحابية لإدارة المواقع والآليات.",
+    version="1.1.0"
+)
 
-app = FastAPI(title="منصة تعدين السودان الرقمية - Sudan Mining Hub", version="1.0.0")
-
+# تفعيل الـ CORS لضمان إمكانية الاتصال من تطبيقات الويب والموبايل مستقبلاً
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -46,52 +24,53 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- البيانات الوهمية المستقرة للتأكد من عمل البيئتين ---
-mock_sites = [
-    {"id": 1, "name": "موقع أبو حمد الرئيسي", "location": "ولاية نهر النيل", "is_active": True},
-    {"id": 2, "name": "موقع وادي حلفا", "location": "الولاية الشمالية", "is_active": True}
-]
+# حدث بدء التشغيل: إنشاء الجداول تلقائياً وبث البيانات التجريبية الأساسية إن كانت قاعدة البيانات فارغة
+@app.on_event("startup")
+def on_startup():
+    # هذا الأمر ينشئ جداول mining_sites و equipment في PostgreSQL فوراً إذا لم تكن موجودة
+    SQLModel.metadata.create_all(engine)
+    
+    # بث بيانات أولية كـ Mock Data في الجداول الحقيقية عند أول تشغيل فقط
+    with Session(engine) as session:
+        if not session.exec(select(MiningSite)).first():
+            site1 = MiningSite(name="موقع أبو حمد الرئيسي", location="ولاية نهر النيل")
+            site2 = MiningSite(name="موقع وادي حلفا", location="الولاية الشمالية")
+            session.add(site1)
+            session.add(site2)
+            session.commit()
 
-mock_equipment = [
-    {"id": 1, "name": "غربال ذهب هيدروليكي", "type": "تصفية", "status": "متاح"},
-    {"id": 2, "name": "جرافة تعدين CAT", "type": "حفر", "status": "في الخدمة"}
-]
+# --- مسارات الـ API (Endpoints) المحدثة لتقرأ وتكتب من قاعدة البيانات ---
 
-# --- الـ Schemas الأساسية ---
-class MiningSiteSchema(BaseModel):
-    id: Optional[int] = None
-    name: str
-    location: str
-    is_active: bool
-
-class EquipmentSchema(BaseModel):
-    id: Optional[int] = None
-    name: str
-    type: str
-    status: str
-
-# --- الـ Endpoints المستقرة (التي تعطي استجابة 200) ---
-@app.get("/")
+@app.get("/", tags=["الرئيسية"])
 def read_root():
-    return {"status": "running", "environment": "Cloud (Render)" if os.getenv("DATABASE_URL") else "Local (Termux)"}
+    return {"status": "online", "message": "Welcome to Sudan Mining Hub API Connected to PostgreSQL"}
 
-@app.get("/api/v1/mining/sites", response_model=List[MiningSiteSchema], status_code=200)
-def get_mining_sites():
-    return mock_sites
+# 1. جلب كل مواقع التعدين
+@app.get("/api/v1/mining/sites", response_model=List[MiningSite], tags=["م مواقع التعدين"])
+def get_mining_sites(session: Session = Depends(get_session)):
+    sites = session.exec(select(MiningSite)).all()
+    return sites
 
-@app.get("/api/v1/mining/sites/{site_id}", response_model=MiningSiteSchema, status_code=200)
-def get_mining_site_by_id(site_id: int):
-    site = next((s for s in mock_sites if s["id"] == site_id), None)
+# 2. جلب موقع تعدين محدد عبر الـ ID
+@app.get("/api/v1/mining/sites/{site_id}", response_model=MiningSite, tags=["مواقع التعدين"])
+def get_mining_site_by_id(site_id: int, session: Session = Depends(get_session)):
+    site = session.get(MiningSite, site_id)
     if not site:
-        raise HTTPException(status_code=404, detail="موقع التعدين غير موجود")
+        raise HTTPException(status_code=404, detail="Mining site not found")
     return site
 
-@app.get("/api/v1/equipment", response_model=List[EquipmentSchema], status_code=200)
-def get_all_equipment():
-    return mock_equipment
+# 3. جلب كل المعدات والآليات
+@app.get("/api/v1/equipment", response_model=List[Equipment], tags=["المعدات والآليات"])
+def get_all_equipment(session: Session = Depends(get_session)):
+    equipments = session.exec(select(Equipment)).all()
+    return equipments
 
-@app.post("/api/v1/equipment", response_model=EquipmentSchema, status_code=201)
-def create_equipment(equipment: EquipmentSchema):
-    new_item = equipment.dict()
-    mock_equipment.append(new_item)
-    return new_item
+# 4. إضافة معدة جديدة (وهنا سيتولى PostgreSQL توليد الـ ID تلقائياً واختفاء الـ null)
+@app.post("/api/v1/equipment", response_model=Equipment, status_code=201, tags=["المعدات والآليات"])
+def create_equipment(equipment_data: Equipment, session: Session = Depends(get_session)):
+    # تصفير الـ id لضمان أن قاعدة البيانات هي من ستولد الرقم التسلسلي الفريد
+    equipment_data.id = None
+    session.add(equipment_data)
+    session.commit()
+    session.refresh(equipment_data) # جلب البيانات بعد حقن الـ ID الجديد من قاعدة البيانات
+    return equipment_data
