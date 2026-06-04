@@ -1,13 +1,20 @@
-from sqlalchemy import Column, Integer, String, DateTime
-from datetime import datetime
-from database import Base
+from typing import Optional
+from sqlmodel import SQLModel, Field
 
-class User(Base):
-    __tablename__ = "users"
+# 1. جدول مواقع التعدين (Mining Sites)
+class MiningSite(SQLModel, table=True):
+    __tablename__ = "mining_sites"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    location: str
+    is_active: bool = Field(default=True)
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    role = Column(String, default="viewer")  # الرتبة الافتراضية للمسجلين الجدد
-    created_at = Column(DateTime, default=datetime.utcnow)
+# 2. جدول المعدات والآليات (Equipment)
+class Equipment(SQLModel, table=True):
+    __tablename__ = "equipment"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    type: str
+    status: str = Field(default="active")
