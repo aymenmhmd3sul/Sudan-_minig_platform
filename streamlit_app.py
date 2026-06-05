@@ -1,41 +1,87 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="منصة تعدين السودان", page_icon="⛏️", layout="wide")
+st.set_page_config(page_title="منصة تعدين السودان الرقمية", page_icon="⛏️", layout="wide")
+
+# رابط السيرفر الفعلي المرفوع على Render
+API_URL = "https://sudan-mining-platform.onrender.com"
 
 st.title("⛏️ منصة تعدين السودان الرقمية")
 st.markdown("---")
 
-API_URL = "https://sudan-mining-platform.onrender.com"
+# القائمة الجانبية الشاملة لكافة أقسام المنصة
+menu = st.sidebar.radio(
+    "تصفح أقسام المنصة:", 
+    [
+        "🏠 الرئيسية", 
+        "🚜 تتبع المعدات والآليات", 
+        "🗺️ مواقع التعدين", 
+        "💰 أسعار الذهب اليوم", 
+        "📝 تسجيل حساب جديد", 
+        "🔑 دخول"
+    ]
+)
 
-menu = st.sidebar.radio("القائمة", ["🏠 الرئيسية", "📝 تسجيل", "🔑 دخول", "👤 ملفي"])
+# 1. القسم الرئيسي
+if menu == "🏠 الرئيسية":
+    st.header("مرحباً بك في مركز تعدين السودان الرقمي")
+    st.write("نظام سحابي متكامل لتتبع وإدارة عمليات التعدين، الآليات، والأسعار الحية في السودان.")
+    
+    # إحصائيات سريعة كنموذج واجهة
+    col1, col2, col3 = st.columns(3)
+    col1.metric(label="المواقع النشطة", value="12 موقع")
+    col2.metric(label="المعدات المسجلة", value="+45 آلية")
+    col3.metric(label="تحديث الأسعار", value="نشط حالياً")
 
-if menu == "📝 تسجيل":
-    st.header("إنشاء حساب جديد")
+# 2. قسم المعدات والآليات
+elif menu == "🚜 تتبع المعدات والآليات":
+    st.header("🚜 إدارة وتتبع الآليات والمعدات")
+    st.write("هنا يمكنك مراقبة الوقود، ساعات العمل، ومواقع الجرافات والمولدات في البيئة الحية.")
+    
+    # نموذج إضافة/عرض المعدات
+    st.subheader("إضافة معدة جديدة للموقع")
+    eq_name = st.text_input("اسم المعدة / الآلية")
+    eq_type = st.selectbox("نوع المعدة", ["جرافة (Digger)", "مولد كهربائي", "مضخة مياه", "شاحنة نقل"])
+    if st.button("حفظ المعدة"):
+        st.success(f"تم تسجيل {eq_name} بنجاح وجاري ربطها بنظام التتبع.")
+
+# 3. قسم مواقع التعدين
+elif menu == "🗺️ مواقع التعدين":
+    st.header("🗺️ تتبع مواقع التعدين والامتياز")
+    st.write("عرض تفصيلي لمناطق الإنتاج والتعدين الأهلي والشركات.")
+    st.info("جاري تحميل الخرائط الإحداثية للمواقع النشطة في ولايات السودان المختلفة...")
+
+# 4. قسم أسعار الذهب
+elif menu == "💰 أسعار الذهب اليوم":
+    st.header("💰 مؤشر أسعار الذهب في السوق المحلي والعالمي")
+    st.write("تحديثات بورصة الذهب اللحظية.")
+    
+    # جدول تجريبي لأسعار الذهب
+    st.table({
+        "العيار": ["عيار 24", "عيار 21", "عيار 18", "الخام المحلي (جرام)"],
+        "السعر الحالي (تقديري)": ["105,000 ج.س", "91,875 ج.س", "78,750 ج.س", "88,000 ج.س"]
+    })
+
+# 5. قسم التسجيل (المرتبط بالسيرفر بنجاح)
+elif menu == "📝 تسجيل حساب جديد":
+    st.header("إنشاء حساب جديد في المنصة")
     username = st.text_input("اسم المستخدم")
     email = st.text_input("البريد الإلكتروني")
     password = st.text_input("كلمة المرور", type="password")
-    if st.button("تسجيل"):
+    if st.button("تنفيذ التسجيل"):
         try:
             response = requests.post(f"{API_URL}/api/v1/register", json={"username": username, "email": email, "password": password})
             if response.status_code in [200, 201]:
-                st.success("تم التسجيل بنجاح!")
+                st.success("تم التسجيل بنجاح في قاعدة البيانات السحابية!")
             else:
                 st.error(f"خطأ: {response.json().get('detail', 'فشل التسجيل')}")
         except:
-            st.error("خطأ في الاتصال بالخادم")
+            st.error("خطأ في الاتصال بالخادم، يرجى التحقق من حالة الـ API")
 
+# 6. قسم الدخول
 elif menu == "🔑 دخول":
-    st.header("تسجيل الدخول")
-    email = st.text_input("البريد الإلكتروني")
-    password = st.text_input("كلمة المرور", type="password")
+    st.header("تسجيل الدخول للنظام")
+    email_login = st.text_input("البريد الإلكتروني")
+    pass_login = st.text_input("كلمة المرور", type="password")
     if st.button("دخول"):
-        st.info("سيتم إضافة وظيفة تسجيل الدخول قريباً")
-
-elif menu == "👤 ملفي":
-    st.header("معلومات المستخدم")
-    st.info("سجل الدخول أولاً")
-
-else:
-    st.header("مرحباً بك في منصة تعدين السودان")
-    st.write("استخدم القائمة الجانبية للتسجيل أو الدخول")
+        st.info("سيتم تفعيل مطابقة صلاحيات الدخول عبر الـ API في التحديث القادم.")
