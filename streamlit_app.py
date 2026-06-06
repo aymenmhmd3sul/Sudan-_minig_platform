@@ -11,49 +11,48 @@ API_URL = "https://sudan-mining-platform.onrender.com"
 # طبقة جلب البيانات (Data Layer & Caching)
 # ==========================================
 
-@st.cache_data(ttl=60)  # تحديث البيانات كل دقيقة تلقائياً لتقليل الضغط على السيرفر
+@st.cache_data(ttl=30)  # كاش لمدة 30 ثانية لتحديث البيانات بسلاسة
 def fetch_dashboard_metrics():
-    """جلب المؤشرات الخمسة الأساسية من الـ API بشكل حي"""
+    """جلب المؤشرات الخمسة الأساسية من الـ API بشكل حي ومعالجة الجداول الفارغة"""
     metrics = {
         "sites_count": 0,
         "equipment_count": 0,
         "reports_count": 0,
         "total_production": 0.0,
-        "gold_price": "لا يوجد اتصال"
+        "gold_price": "في انتظار التحديث"
     }
     
     try:
-        # 1. عدد المواقع
+        # 1. جلب المواقع
         r_sites = requests.get(f"{API_URL}/api/v1/sites", timeout=5)
         if r_sites.status_code == 200:
             metrics["sites_count"] = len(r_sites.json())
             
-        # 2. عدد المعدات
+        # 2. جلب المعدات
         r_eq = requests.get(f"{API_URL}/api/v1/equipment", timeout=5)
         if r_eq.status_code == 200:
             metrics["equipment_count"] = len(r_eq.json())
             
-        # 3. عدد البلاغات النشطة
+        # 3. جلب البلاغات
         r_rep = requests.get(f"{API_URL}/api/v1/reports", timeout=5)
         if r_rep.status_code == 200:
             metrics["reports_count"] = len(r_rep.json())
             
-        # 4. إجمالي الإنتاج
+        # 4. جلب وحساب إجمالي الإنتاج
         r_prod = requests.get(f"{API_URL}/api/v1/production", timeout=5)
         if r_prod.status_code == 200:
-            # حساب مجموع حقول الإنتاج المسجلة
             productions = r_prod.json()
-            metrics["total_production"] = sum(item.get("amount", 0) for item in productions)
+            if productions:
+                metrics["total_production"] = sum(item.get("amount", 0) for item in productions)
             
-        # 5. آخر سعر للذهب
+        # 5. جلب آخر سعر للذهب
         r_price = requests.get(f"{API_URL}/api/v1/prices", timeout=5)
         if r_price.status_code == 200:
             prices = r_price.json()
-            if prices:
-                # جلب آخر سعر مضاف في المصفوفة
+            if prices and len(prices) > 0:
                 metrics["gold_price"] = f"{prices[-1].get('price', 0):,} ج.س"
     except Exception as e:
-        st.warning("⚠️ تعذر الاتصال اللحظي ببعض مسارات السيرفر، يتم عرض البيانات المحلية.")
+        pass  # الاحتفاظ بالقيم الافتراضية بدلاً من انهيار الواجهة
         
     return metrics
 
@@ -71,9 +70,8 @@ menu = st.sidebar.radio(
         "📊 لوحة المؤشرات (المستثمرين)",
         "🚜 تتبع المعدات والآليات",
         "🗺️ مواقع التعدين",
-        "💰 أسعار الذهب اليوم",
-        "📝 تسجيل حساب جديد",
-        "🔑 دخول"
+        "💰 تحديث بورصة الأسعار",
+        "📝 تسجيل حساب جديد"
     ]
 )
 
@@ -82,7 +80,7 @@ menu = st.sidebar.radio(
 # ==========================================
 if menu == "📊 لوحة المؤشرات (المستثمرين)":
     st.header("📈 لوحة الأداء العام والمؤشرات الاستثمارية")
-    st.write("سحابي متكامل لتتبع وإدارة عمليات ومواقع التعدين، الآليات، والإنتاج الحي في السودان.")
+    st.write("نظام سحابي متكامل لتتبع وإدارة عمليات ومواقع التعدين، الآليات، والإنتاج الحي في السودان.")
     
     st.markdown("### 🏷️ المؤشرات الحية للمنصة (من واقع قاعدة البيانات)")
     
@@ -93,7 +91,7 @@ if menu == "📊 لوحة المؤشرات (المستثمرين)":
     col2.metric(label="🚜 المعدات المسجلة", value=f"{live_data['equipment_count']} آلية")
     col3.metric(label="🚨 البلاغات المفتوحة", value=f"{live_data['reports_count']} بلاغ")
     col4.metric(label="🏆 إجمالي إنتاج الذهب", value=f"{live_data['total_production']} جرام")
-    col5.metric(label="💰 سعر الذهب الحالي", value=live_data['gold_price'])
+    col5.metric(label="💰 سعر الخام الحالي", value=live_data['gold_price'])
 
     st.markdown("---")
     st.info("💡 هذه اللوحة تحدث بياناتها تلقائياً من خادم PostgreSQL السحابي لتقديم رؤية دقيقة للشركاء والمستثمرين.")
@@ -111,13 +109,12 @@ elif menu == "🚜 تتبع المعدات والآليات":
     
     if st.button("حفظ المعدة"):
         if eq_name:
-            # تجهيز البيانات للإرسال إلى السيرفر
             payload = {"name": eq_name, "type": eq_type, "status": "active"}
             try:
                 res = requests.post(f"{API_URL}/api/v1/equipment", json=payload, timeout=5)
                 if res.status_code in [200, 201]:
-                    st.success(f"✔️ تم تسجيل {eq_name} بنجاح وجاري ربطها بنظام التتبع!")
-                    st.cache_data.clear() # تفريغ الكاش لتحديث الأرقام فوراً في القائمة الرئيسية
+                    st.success(f"✔️ تم تسجيل {eq_name} بنجاح في قاعدة البيانات!")
+                    st.cache_data.clear() # تفريغ الكاش لتحديث الأرقام فوراً
                 else:
                     st.error(f"خطأ من السيرفر: {res.status_code}")
             except Exception as e:
@@ -130,23 +127,46 @@ elif menu == "🚜 تتبع المعدات والآليات":
 # ==========================================
 elif menu == "🗺️ مواقع التعدين":
     st.header("🗺️ تتبع مواقع التعدين والامتياز")
-    st.write("عرض تفصيلي لمناطق الإنتاج والتعدين الأهلي والشركات.")
-    st.info("...جاري تحميل الخرائط الإحداثية للمواقع النشطة في ولايات السودان المختلفة...")
-
-# ==========================================
-# 4. قسم أسعار الذهب
-# ==========================================
-elif menu == "💰 أسعار الذهب اليوم":
-    st.header("💰 مؤشر أسعار الذهب في السوق المحلي والعالمي")
-    st.write("تحديثات بورصة الذهب اللحظية.")
+    st.subheader("➕ تسجيل موقع تعدين جديد")
+    site_name = st.text_input("اسم موقع التعدين")
+    site_state = st.text_input("الولاية / المنطقة")
     
-    st.table({
-        "العيار": ["عيار 24", "عيار 21", "عيار 18", "الخام المحلي (جرام)"],
-        "السعر الحالي (تقديري)": ["105,000 ج.س", "91,875 ج.س", "78,750 ج.س", "جاري السحب الحقيقي..."]
-    })
+    if st.button("حفظ الموقع"):
+        if site_name and site_state:
+            payload = {"name": site_name, "state": site_state, "coordinates": "0.0, 0.0", "is_active": True}
+            try:
+                res = requests.post(f"{API_URL}/api/v1/sites", json=payload, timeout=5)
+                if res.status_code in [200, 201]:
+                    st.success(f"✔️ تم تسجيل موقع {site_name} بنجاح!")
+                    st.cache_data.clear()
+                else:
+                    st.error(f"خطأ: {res.status_code}")
+            except Exception as e:
+                st.error("❌ فشل الاتصال بالخادم السحابي.")
 
 # ==========================================
-# 5. قسم التسجيل ودخول المستخدمين
+# 4. لوحة التشغيل وضخ الأسعار (التغذية التشغيلية)
+# ==========================================
+elif menu == "💰 تحديث بورصة الأسعار":
+    st.header("💰 الإدارة التشغيلية لبورصة أسعار الذهب")
+    st.write("تحديث أسعار جرام الذهب الخام المعتمدة في السوق المحلي لتعكس حياً في لوحة المستثمرين.")
+    
+    new_price = st.number_input("سعر جرام الذهب الحالي (بالجنيه السوداني)", min_value=1000, value=95000, step=500)
+    
+    if st.button("تحديث وضخ السعر الآن"):
+        payload = {"price": float(new_price), "currency": "SDG"}
+        try:
+            res = requests.post(f"{API_URL}/api/v1/prices", json=payload, timeout=5)
+            if res.status_code in [200, 201]:
+                st.success(f"🎉 تم ضخ السعر بنجاح ({new_price:,} ج.س) وتحديث قاعدة بيانات PostgreSQL!")
+                st.cache_data.clear()
+            else:
+                st.error(f"فشل التحديث: {res.status_code}")
+        except Exception as e:
+            st.error("🚨 خطأ في الاتصال بالـ API.")
+
+# ==========================================
+# 5. قسم التسجيل
 # ==========================================
 elif menu == "📝 تسجيل حساب جديد":
     st.header("📝 إنشاء حساب جديد في المنصة")
@@ -158,15 +178,8 @@ elif menu == "📝 تسجيل حساب جديد":
         try:
             response = requests.post(f"{API_URL}/api/v1/users/register", json={"username": username, "email": email, "password": password}, timeout=5)
             if response.status_code in [200, 201]:
-                st.success("🎉 تم إنشاء الحساب بنجاح في قاعدة البيانات السحابية!")
+                st.success("🎉 تم إنشاء الحساب بنجاح!")
             else:
                 st.error(f"خطأ: {response.json().get('detail', 'تعذر التسجيل')}")
         except Exception as e:
-            st.error("🚨 خطأ في الاتصال بالخادم، يرجى التحقق من حالة الـ API.")
-
-elif menu == "🔑 دخول":
-    st.header("🔑 تسجيل الدخول للنظام")
-    email_login = st.text_input("البريد الإلكتروني أو اسم المستخدم")
-    password_login = st.text_input("كلمة المرور الكودية", type="password")
-    if st.button("دخول"):
-        st.info("جاري التحقق من الصلاحيات وشهادة التشفير...")
+            st.error("🚨 خطأ في الاتصال بالخادم.")
