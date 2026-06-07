@@ -5,7 +5,16 @@ import requests
 st.set_page_config(page_title="منصة تعدين السودان الرقمية", page_icon="⛏️", layout="wide")
 
 st.markdown("""
-    <style>
+    /* إخفاء أيقونة المجلد والنص العمودي المتداخل في الأعلى */
+.stAppHeader, div[data-testid="stSidebarCollapse"] span {
+    display: none !important;
+}
+/* تحسين تباعد الأسطر للعنوان الرئيسي على الجوال */
+h1, h2, h3 {
+    line-height: 1.5 !important;
+    padding-top: 10px !important;
+}
+<style>
     /* قلب اتجاه الواجهة بالكامل لليمين */
     html, body, [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {
         direction: RTL;
