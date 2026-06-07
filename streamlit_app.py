@@ -1,36 +1,12 @@
 import streamlit as st
 import requests
 
-# 1. إعداد الصفحة بدعم المحاذاة الافتراضية والشاشات العريضة
+# 1. إعداد الصفحة بالتنسيق الافتراضي المستقر ودعم الشاشات العريضة
 st.set_page_config(
     page_title="منصة تعدين السودان الرقمية", 
     page_icon="⛏️", 
     layout="wide"
 )
-
-# فتح الماركداون وحقن الستايل الأول المستقر والنظيف تماماً
-st.markdown("""
-<style>
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stSidebarViewContainer"] {
-        direction: RTL !important;
-        text-align: right !important;
-    }
-    
-    div[data-testid="stMarkdownContainer"] p {
-        text-align: right !important;
-    }
-    
-    .stTextInput input, .stTextArea textarea, .stSelectbox select {
-        direction: RTL !important;
-        text-align: right !important;
-    }
-    
-    section[data-testid="stSidebar"] .stRadio > div {
-        direction: RTL !important;
-        text-align: right !important;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # رابط السيرفر الخلفي على ريندر
 API_URL = "https://sudan-mining-platform.onrender.com"
@@ -64,7 +40,7 @@ platform_stats = fetch_platform_metrics()
 st.title("⛏️ منصة تعدين السودان الرقمية - منظومة الإمداد اللوجستي")
 st.markdown("---")
 
-# القائمة الجانبية للتنقل
+# القائمة الجانبية للتنقل (بالتنسيق الافتراضي المستقر)
 menu = st.sidebar.radio(
     "📁 تصفح أقسام المنصة",
     [
