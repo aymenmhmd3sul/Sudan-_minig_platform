@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # 1. إعداد الصفحة وتفعيل المحاذاة لليمين (RTL) لدعم اللغة العربية بشكل احترافي على الهاتف
-st.set_page_config(page_title="منصة تعدين السودان الرقمية", page_icon="⛏️", layout="padded")
+st.set_page_config(page_title="منصة تعدين السودان الرقمية", page_icon="⛏️", layout="wide")
 
 st.markdown("""
     <style>
