@@ -1,14 +1,14 @@
 import streamlit as st
 import requests
 
-# 1. إعداد الصفحة بشكل احترافي وتفعيل المحاذاة لليمين ودعم الشاشات العريضة
+# 1. إعداد الصفحة بدعم المحاذاة الافتراضية والشاشات العريضة
 st.set_page_config(
     page_title="منصة تعدين السودان الرقمية", 
     page_icon="⛏️", 
     layout="wide"
 )
 
-# فتح الماركداون وحقن الستايل بدون أي نصوص برمجية مكسورة
+# فتح الماركداون وحقن الستايل الأول المستقر والنظيف تماماً
 st.markdown("""
 <style>
     html, body, [data-testid="stAppViewContainer"], [data-testid="stSidebarViewContainer"] {
@@ -28,23 +28,6 @@ st.markdown("""
     section[data-testid="stSidebar"] .stRadio > div {
         direction: RTL !important;
         text-align: right !important;
-    }
-    
-    [data-testid="stHeader"], 
-    .stAppHeader, 
-    [data-testid="stSidebarCollapse"], 
-    [data-testid="stSidebarNav"], 
-    [data-testid="stSidebarNavItems"], 
-    section[data-testid="stSidebarNav"] {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0px !important;
-        width: 0px !important;
-    }
-    
-    h1, h2, h3 {
-        line-height: 1.5 !important;
-        padding-top: 10px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -81,7 +64,7 @@ platform_stats = fetch_platform_metrics()
 st.title("⛏️ منصة تعدين السودان الرقمية - منظومة الإمداد اللوجستي")
 st.markdown("---")
 
-# القائمة الجانبية
+# القائمة الجانبية للتنقل
 menu = st.sidebar.radio(
     "📁 تصفح أقسام المنصة",
     [
