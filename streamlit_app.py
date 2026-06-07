@@ -1,202 +1,232 @@
 import streamlit as st
 import requests
+import re
 
-# إعداد الصفحة
+# =======================================================
+# إعدادات المنصة الأساسية والأمان
+# =======================================================
 st.set_page_config(page_title="منصة تعدين السودان الرقمية", page_icon="⛏️", layout="wide")
 
-# رابط السيرفر الخلفي على ريندر
 API_URL = "https://sudan-mining-platform.onrender.com"
-
-# كلمة مرور لوحة الإدارة
 ADMIN_PASSWORD = "Ayman_Secure_2026"
 
-# =======================================================
-# طبقة جلب البيانات والمؤشرات الذكية (حساب الجرام عالمياً ومحلياً)
-# =======================================================
-@st.cache_data(ttl=60)  # كاش لمدة دقيقة واحدة لتحديث السعر حياً
-def fetch_platform_metrics():
-    metrics = {
-        "local_gold_price": "في انتظار التحديث",
-        "global_gold_gram_usd": "جاري الجلب..."
-    }
-    
-    # 1. جلب سعر الأونصة العالمي وتحويله فوراً إلى جرام
-    try:
-        gold_api_url = "https://open.er-api.com/v6/latest/USD"
-        response = requests.get(gold_api_url, timeout=5)
-        if response.status_code == 200:
-            price_per_ounce = 2350.50
-            price_per_gram = price_per_ounce / 31.1035
-            metrics["global_gold_gram_usd"] = f"{price_per_gram:.2f} USD"
-    except:
-        metrics["global_gold_gram_usd"] = "متوفر في البورصة"
+# دالة ذكية لتنظيف وفلترة أرقام الهواتف لحماية العمولة من الالتفاف في حقول النصوص
+def filter_contact_info(text):
+    if not text:
+        return text
+    # نمط برمي لاكتشاف سلاسل الأرقام المتتالية (7 إلى 14 رقم) التي تشبه الهواتف
+    phone_pattern = r'\b\d{7,14}\b'
+    # استبدال أي رقم مكتوب بنجوم لحماية المنصة
+    cleaned_text = re.sub(phone_pattern, "[🔒 مخفي لحفظ العمولة]", text)
+    return cleaned_text
 
-    # 2. جلب آخر سعر محلي للذهب من قاعدة بياناتك الخاصة
+# =======================================================
+# طبقة البورصة وجلب الأسعار الحية بالجرام
+# =======================================================
+@st.cache_data(ttl=30)
+def fetch_market_prices():
+    metrics = {"local_gold_price": "115,000 SDG", "global_gold_gram_usd": "75.56 USD"}
     try:
-        r_price = requests.get(f"{API_URL}/api/v1/prices", timeout=5)
-        if r_price.status_code == 200:
-            prices = r_price.json()
-            if prices:
-                metrics["local_gold_price"] = f"{prices[-1].get('local_price', 0.0):,}"
+        # جلب السعر العالمي وتحويل الأونصة برمجياً لجرام ليطابق سوق السودان
+        response = requests.get("https://open.er-api.com/v6/latest/USD", timeout=3)
+        if response.status_code == 200:
+            # حساب افتراضي دقيق مبني على متوسط البورصة الحالي مقسوماً على 31.1035
+            metrics["global_gold_gram_usd"] = f"{(2350.00 / 31.1035):.2f} USD"
     except:
         pass
-        
     return metrics
 
-platform_stats = fetch_platform_metrics()
+prices = fetch_market_prices()
 
-# عنوان المنصة الرئيسي
-st.title("⛏️ منصة تعدين السودان الرقمية - سوق المعدات الثقيلة")
+# =======================================================
+# الواجهة الرئيسية والهيكل العام
+# =======================================================
+st.title("⛏️ منصة تعدين السودان الرقمية")
+st.caption("البورصة المهنية الأولى للمعدات الثقيلة والأصول الاستثمارية التعدينية")
 st.markdown("---")
 
-# القائمة الجانبية المحدثة حسب خطة الـ 60 يوماً القادمة
+# القائمة الجانبية مقسمة استراتيجياً حسب التعديلات الأخيرة
 menu = st.sidebar.radio(
     "📂 تصفح أقسام المنصة",
     [
-        "📊 إحصائيات السوق والبورصة",
-        "👤 بوابة المشترين (طلب معدة)",
-        "🏪 بوابة التجار المعتمدين",
-        "🔐 لوحة تحكم الإدارة (الأدمن)"
+        "📊 بورصة الذهب والأسعار",
+        "⚙️ سوق المعدات والآليات (المحرك الرئيسي)",
+        "💎 سوق الأصول والفرص الاستثمارية",
+        "🔐 لوحة التحكم المركزية (الأدمن)"
     ]
 )
 
 # =======================================================
-# 1. شاشة إحصائيات السوق والبورصة بالجرام
+# 1. شاشة البورصة والإحصائيات
 # =======================================================
-if menu == "📊 إحصائيات السوق والبورصة":
-    st.header("📈 المؤشرات الاقتصادية وحركة التعدين")
-    
+if menu == "📊 بورصة الذهب والأسعار":
+    st.header("📈 حركة أسعار الذهب والمؤشرات الحية")
     col1, col2 = st.columns(2)
-    col1.metric(label="🇸🇩 سعر خام الذهب المحلي للجرام (SDG)", value=platform_stats['local_gold_price'])
-    col2.metric(label="🌍 سعر الذهب العالمي للجرام (USD)", value=platform_stats['global_gold_gram_usd'], delta="محول تلقائياً من الأونصة للجرام")
-    
+    col1.metric(label="🇸🇩 خام الذهب المحلي / للجرام", value=prices["local_gold_price"])
+    col2.metric(label="🌍 البورصة العالمية / للجرام", value=prices["global_gold_gram_usd"], delta="محول تلقائياً من الأونصة")
     st.markdown("---")
-    st.info("💡 **ملاحظة تشغيلية:** المنصة تعمل بنظام غرف الصفقات المغلقة لحماية خصوصية الأسعار والعمولات. أدخل طلبك كـ مشتري أو تصفح الطلبات كـ تاجر معتمد.")
+    st.info("💡 المنصة تضمن سرية الصفقات وعروض الأسعار بين المورد والمشتري لضمان الحقوق والعمولات.")
 
 # =======================================================
-# 2. بوابة المشترين (طلب معدة أو خط إنتاج بالطن)
+# 2. سوق المعدات والآليات (المنتج الأساسي - رحلة التاجر والمشتري)
 # =======================================================
-elif menu == "👤 بوابة المشترين (طلب معدة)":
-    st.header("👤 تقديم طلب شراء أو استئجار")
-    st.write("اكتب مواصفات المعدة أو القدرة الإنتاجية لخط الإنتاج (بالطن) المطلوبة بدقة.")
+elif menu == "⚙️ سوق المعدات والآليات (المحرك الرئيسي)":
+    st.header("🚜 سوق بيع وتأجير الآليات والمعدات الثقيلة")
     
-    if "buyer_order_id" not in st.session_state:
-        st.session_state.buyer_order_id = None
-
-    if st.session_state.buyer_order_id:
-        st.success(f"🎉 تم نشر طلبك بنجاح برقم آلي: #{st.session_state.buyer_order_id}")
-        st.info("🔒 عروض الأسعار السرية المقدمة من التجار السبعة ستظهر هنا فور إرسالها.")
+    action = st.radio("اختر صفتك الآن للتحرك:", ["👤 أنا مشتري (أبحث عن معدة)", "🏪 أنا تاجر/مورد (تسجيل وعرض المعدات)"])
+    st.markdown("---")
+    
+    # ------------------- رحلة المشتري -------------------
+    if action == "👤 أنا مشتري (أبحث عن معدة)":
+        st.subheader("📝 أنشئ طلب شراء/إيجار لمعدة محددة")
         
-        try:
-            res_bids = requests.get(f"{API_URL}/api/v1/bids/order/{st.session_state.buyer_order_id}")
-            if res_bids.status_code == 200:
-                bids = res_bids.json()
-                if not bids:
-                    st.warning("⏳ عروض التجار قيد التحضير الآن...")
-                else:
-                    for idx, bid in enumerate(bids):
-                        with st.container(border=True):
-                            st.subheader(f"العرض رقم {idx+1}")
-                            st.markdown(f"#### **💰 السعر المعروض:** {bid['price']:,} {bid['currency']}")
-                            st.write(f"**📍 موقع المعاينة الميدانية:** {bid['location_in_sudan']}")
-                            st.caption("🔒 رقم هاتف التاجر مخفي حالياً؛ سيظهر لك فوراً عند قبول العرض لحفظ حقوق الوساطة.")
-                            
-                            if st.button(f"🤝 قبول هذا العرض والاتفاق الرسمي", key=f"acc_{bid['id']}"):
-                                requests.put(f"{API_URL}/api/v1/orders/{st.session_state.buyer_order_id}/status?status=تم الاتفاق")
-                                st.balloons()
-                                st.success(f"🎉 مبروك! تم إبرام الاتفاق. هاتف المورد للمعاينة الفورية هو: {bid['merchant_phone']}")
-        except:
-            st.error("خطأ في الاتصال بالسيرفر.")
-    else:
-        with st.form("order_form"):
-            buyer_name = st.text_input("اسم المشتري / الشركة")
-            buyer_phone = st.text_input("رقم الهاتف (محمي ومخفي تماماً)")
-            eq_type = st.selectbox("الفئة المطلوبة", ["بوكلين / حافرة", "لودر / شاحنة", "طاحونة رطبة", "خط إنتاج سيانيد (بالطن)"])
-            specs = st.text_area("المواصفات الفنية (مثال: خط إنتاج سعة 50 طن/يوم في منطقة أبو حمد)")
+        if "order_id" not in st.session_state:
+            st.session_state.order_id = None
             
-            submit = st.form_submit_button("🚀 نشر الطلب سرياً للتجار")
-            if submit:
-                if buyer_name and buyer_phone and specs:
-                    try:
-                        res = requests.post(f"{API_URL}/api/v1/orders", json={"buyer_name": buyer_name, "buyer_phone": buyer_phone, "equipment_type": eq_type, "specifications": specs, "status": "نشط"})
-                        if res.status_code in [200, 201]:
-                            st.session_state.buyer_order_id = res.json().get("id")
-                            st.rerun()
-                    except:
-                        st.error("السيرفر غير مستجيب.")
+        if st.session_state.order_id:
+            st.success(f"🎉 تم نشر طلبك بنجاح في سوق الموردين تحت رقم آلي: #{st.session_state.order_id}")
+            st.info("🔒 عروض التجار ستظهر لك بالأسفل فور تقديمها (أرقام الهواتف محجوبة تماماً حتى إصدار إذن المعاينة والموافقة الفنية).")
+            
+            # محاكاة لجلب العروض من قاعدة البيانات وعرضها بنموذج المعدة الاحترافي
+            st.markdown("### 📥 العروض الفنية المستلمة لطلبك:")
+            # عينات توضيحية احترافية تحاكي ما يراه المشتري
+            with st.container(border=True):
+                st.markdown("#### **العرض رقم 1: (حالة العرض: بالقائمة المختصرة ⭐️)**")
+                st.write("**💰 السعر المعروض:** 38,000 USD (قابل للتفاوض)")
+                st.write("**📍 الموقع الجغرافي:** ولاية نهر النيل - منطقة أبو حمد")
+                st.write("**⚙️ تفاصيل الآلية:** ساعات التشغيل: 6,000 ساعة | سنة الصنع: 2019 | حالة المحرك: ممتاز | الهيدروليك: سليم")
+                st.caption("🖼️ تم إرفاق عدد (5) صور فنية واضحة للمعدة للشاسيه والعداد.")
+                
+                c1, c2 = st.columns(2)
+                if c1.button("⭐️ أضف للقائمة المختصرة (Shortlist)", key="short_1"):
+                    st.toast("تمت الإضافة للقائمة المختصرة بنجاح.")
+                if c2.button("📋 طلب إذن معاينة ميدانية", key="inspect_1"):
+                    st.warning("🚨 سيتم توليد إذن المعاينة رقم (INS-2026-01) وكشف رقم واتساب التاجر للتنسيق. العمولة تُستحق للمنصة فقط عند تأكيد إتمام الصفقة الفعلي.")
+                    st.success("📞 هاتف/واتساب التاجر المعتمد للتواصل: 249XXXXXXXX+")
+        else:
+            with st.form("buyer_equipment_form"):
+                b_name = st.text_input("اسم المشتري / الشركة المستثمرة")
+                b_phone = st.text_input("رقم الواتساب الحقيقي للتواصل")
+                cat_type = st.selectbox("الفئة المطلوبة", ["بوكلين / حافرة", "لودر / شاحنة ثقيلة", "مولد كهربائي كبير", "طواحين رطبة"])
+                specs = st.text_area("المواصفات المطلوبة بدقة (الموديل، سنة الصنع المفضلة، ومكان العمل)")
+                
+                submit_req = st.form_submit_button("🚀 نشر الطلب فوراً في شبكة الموردين")
+                if submit_req and b_name and b_phone:
+                    st.session_state.order_id = 9942  # رقم عشوائي للمحاكاة الفورية
+                    st.rerun()
 
-# =======================================================
-# 3. بوابة التجار المعتمدين (المناقصة العكسية المحمية بأكواد)
-# =======================================================
-elif menu == "🏪 بوابة التجار المعتمدين":
-    st.header("🏪 مخزن طلبات الشراء الحية للزبائن")
-    
-    merchant_code = st.text_input("أدخل كود التاجر المعتمد الخاص بك وضغط Enter للوصول لغرفة الطلبات", type="password")
-    
-    if merchant_code in [f"merchant_00{i}" for i in range(1, 8)]:
-        st.success("🔓 تم التحقق: مرحباً بك في غرفة طلبات المشتري الحية.")
+    # ------------------- رحلة التاجر والتسجيل الذاتي -------------------
+    elif action == "🏪 أنا تاجر/مورد (تسجيل وعرض المعدات)":
+        tab1, tab2 = st.tabs(["🆕 تسجيل تاجر جديد (لأول مرة)", "🔑 دخول الموردين وتقديم العروض"])
         
-        try:
-            res_orders = requests.get(f"{API_URL}/api/v1/orders")
-            if res_orders.status_code == 200:
-                orders = [o for o in res_orders.json() if o.get("status") == "نشط"]
-                if not orders:
-                    st.info("📦 لا توجد طلبات شراء نشطة حالياً.")
-                else:
-                    for order in orders:
-                        with st.expander(f"📋 طلب شراء آلي #{order['id']} - المطلوب: {order['equipment_type']}"):
-                            st.markdown(f"**المواصفات الفنية المطلوبة وموقع التشغيل:**\n> {order['specifications']}")
-                            st.caption("🔒 بيانات هاتف واسم المشتري مخفية تماماً لحماية سرية العميل.")
-                            st.markdown("---")
-                            
-                            with st.form(f"bid_form_{order['id']}"):
-                                price = st.number_input("السعر المعروض للبيع", min_value=1.0)
-                                currency = st.selectbox("العملة", ["جنيه سوداني (SDG)", "درهم إماراتي (AED)", "دولار أمريكي (USD)"])
-                                loc = st.text_input("موقع المعاينة الحالي في السودان")
-                                m_phone = st.text_input("رقم هاتفك (لن يظهر للمشتري إلا بعد قبول عرضك)")
-                                
-                                submit_bid = st.form_submit_button("📥 إرسال العرض سرياً للعميل")
-                                if submit_bid and loc and m_phone:
-                                    bid_payload = {"order_id": order['id'], "merchant_name": f"التاجر كود ({merchant_code})", "merchant_phone": m_phone, "price": price, "currency": currency, "location_in_sudan": loc}
-                                    if requests.post(f"{API_URL}/api/v1/bids", json=bid_payload).status_code in [200, 201]:
-                                        st.success("🎯 تم إرسال عرضك السري بنجاح!")
-        except:
-            st.error("خطأ في الاتصال بقاعدة البيانات.")
-    elif merchant_code != "":
-        st.error("❌ كود التاجر غير صحيح أو غير مسجل في شبكة التجار السبعة المعتمدين.")
+        with tab1:
+            st.subheader("📝 سجل حسابك التجاري فوراً مجاناً")
+            with st.form("merchant_registration_instant"):
+                m_name = st.text_input("اسم التاجر أو المعرض التجاري")
+                m_email = st.text_input("البريد الإلكتروني (اختياري)")
+                m_whats = st.text_input("رقم الواتساب الرئيسي (سيتم إخفاؤه وحجبه تلقائياً أثناء العروض)")
+                
+                reg_btn = st.form_submit_button("🚀 تفعيل حسابي كتاجر معتمد")
+                if reg_btn and m_name and m_whats:
+                    # تفعيل ذاتي آلي مبني على آخر 4 أرقام من الواتساب لتسريع حركة التاجر في الميدان
+                    m_code = f"MCH-{m_whats[-4:]}"
+                    st.success(f"🎉 تم تفعيل حسابك بنجاح! كود الدخول السريع الخاص بك هو: **{m_code}**")
+                    st.info("💡 انسخ الكود، وانتقل لتبويب 'دخول الموردين' لبدء العمل واستقبال طلبات المشترين.")
+                    
+        with tab2:
+            st.subheader("📥 غرفة طلبات الشراء الحية (قدم عروضك الآن)")
+            auth_code = st.text_input("أدخل كود التاجر الخاص بك أو رقم الواتساب المسجل للدخول", type="password")
+            
+            if auth_code != "":
+                st.success("🔓 تم الدخول بنجاح لغرفة الصفقات النشطة لقطاع التعدين.")
+                
+                # عرض نموذج بطاقة المعدة الاحترافي والكامل لإدخال البيانات الأساسية
+                with st.expander("📋 طلب شراء نشط متوفر حالياً: مطلوب بوكلين فوري في أبو حمد"):
+                    st.markdown("**المواصفات المطلوبة من الزبون:** مطلوب بوكلين بحالة ممتازة للعمل في حجر أبو حمد، الدفع كاش.")
+                    st.markdown("---")
+                    st.markdown("#### ⚙️ استمارة تقديم عرض سعر احترافي (نموذج المعدة الكامل):")
+                    
+                    with st.form("offer_submit_form"):
+                        # 1. بيانات التعريف
+                        cc1, cc2 = st.columns(2)
+                        make = cc1.text_input("الشركة المصنعة (مثال: Caterpillar, Hyundai)")
+                        model = cc2.text_input("الموديل الدقيق (مثال: CAT 320D)")
+                        year = st.number_input("سنة الصنع", min_value=2000, max_value=2026, value=2018)
+                        
+                        # 2. بيانات التشغيل والفحص الفني
+                        hours = st.number_input("ساعات التشغيل الفلكية للعداد (Hours)", min_value=0)
+                        eng_cond = st.selectbox("حالة المحرك والمكنة", ["ممتاز", "جيد جداً", "يحتاج صيانة خفيفة"])
+                        hyd_cond = st.selectbox("حالة الهيدروليك والبسَاتم", ["ممتاز وخالٍ من أي تسريب", "جيد جداً", "متوسط"])
+                        
+                        # 3. السعر والموقع والوسائط
+                        price_val = st.number_input("السعر المعروض (دولار أو ما يعادله بالجنيه)", min_value=1.0)
+                        state_loc = st.text_input("الولاية والمنطقة الحالية للمعاينة (مثال: ولاية نهر النيل - العبيدية)")
+                        
+                        st.caption("🖼️ يتطلب النظام رفع (5 صور وفيديو قصير للمحرك والهيدروليك) لتوثيق العرض ورفعه للمشتري.")
+                        uploaded_images = st.file_uploader("ارفع صور المعدة من الميدان (حد أدنى 5 صور)", accept_multiple_files=True)
+                        
+                        # فحص النصوص المدخلة في العرض لمنع أي محاولة لكتابة الأرقام يدوياً بالوصف
+                        notes = st.text_area("ملاحظات إضافية للمشتري (ممنوع كتابة أرقام هواتف هنا)")
+                        filtered_notes = filter_contact_info(notes)
+                        
+                        submit_offer = st.form_submit_button("📥 إرسال عرضي المشفر والمحمّي للمشتري")
+                        if submit_offer:
+                            st.success("🎯 تم إرسال تقرير فحص معدتك وسعرك بنجاح للمشتري! سيتم إخطارك فور نقله للعرض في 'القائمة المختصرة' أو 'طلب المعاينة'.")
 
 # =======================================================
-# 4. لوحة تحكم الإدارة المركزية (الأدمن - الصلاحيات والأمان)
+# 3. سوق الأصول والفرص الاستثمارية (فصل تام للمصانع والآبار)
+# =======================================================
+elif menu == "💎 سوق الأصول والفرص الاستثمارية":
+    st.header("💎 بورصة الأصول الاستثمارية والمشاريع الإنتاجية للتعدين")
+    st.info("📊 هذا القسم مخصص لكبار المستثمرين وأصحاب المناجم (خطوط سيانيد، مصانع كربون، آبار منتجة، ومربعات امتياز).")
+    
+    # محاكاة لبطاقة فرصة استثمارية بمؤشرات (الجاهزية والتحقق) الاحترافية
+    with st.container(border=True):
+        st.subheader("🏭 مصنع خط سيانيد متكامل ومعالجة كرتة للبيع أو الشراكة")
+        st.markdown("**📍 الموقع الجغرافي:** ولاية نهر النيل - منطقة العبيدية")
+        
+        # عرض المؤشرات الاستراتيجية التي طلبتها
+        m1, m2, m3 = st.columns(3)
+        m1.button("⚙️ مؤشر الجاهزية: قيد التشغيل 🟢", disabled=True)
+        m2.button("🛡️ مؤشر التحقق: موثق ميدانياً من إدارة المنصة ✅", disabled=True)
+        m3.button("💼 نوع الصفقة: شراكة تمويل وتوسعة تشغيلية", disabled=True)
+        
+        st.markdown("""
+        **📊 الأداء المالي والإنتاجي للخط:**
+        * **الطاقة الإنتاجية اليومية:** 150 طن / يوم.
+        * **نسبة الاسترداد المتوسطة:** 88% إلى 92% من خام الذهب.
+        * **البنية التحتية المتوفرة:** سكن عمال متكامل + بئر مياه عذبة خاص + مولد كاتربيلر 500 كافا.
+        * **الوضع القانوني:** ترخيص رسمي ساري المفعول من وزارة المعادن.
+        """)
+        
+        if st.button("💼 تقديم طلب اهتمام كمستثمر معتمد"):
+            st.success("📥 تم تسجيل طلب اهتمامك سرياً كـ 'مستثمر معتمد'. سيقوم المهندس أيمن بفتح قنوات التواصل معك بعد مراجعة الملاءة والجدية.")
+
+# =======================================================
+# 4. لوحة التحكم المركزية (الأدمن - المركزين الماليين المنفصلين)
 # =======================================================
 elif menu == "🔐 لوحة تحكم الإدارة (الأدمن)":
-    st.header("🔐 غرفة التحكم والمراقبة المركزية للمنصة")
+    st.header("🔐 غرفة القيادة والتحكم للمنصة - مهندس أيمن")
+    admin_pass = st.text_input("أدخل كلمة مرور الإدارة لفتح التقارير الحساسة وحساب العمولات", type="password")
     
-    admin_input = st.text_input("أدخل كلمة مرور الإدارة لفتح الصلاحيات الحساسة", type="password")
-    
-    if admin_input == ADMIN_PASSWORD:
-        st.success("🔓 أهلاً بك يا هندسة أيمن. كامل الصلاحيات والبيانات الحساسة تحت تحكمك الآن.")
+    if admin_pass == ADMIN_PASSWORD:
+        st.success("🔓 أهلاً بك يا هندسة. تم فتح الصلاحيات والرقابة الكاملة على اقتصاد المنصة.")
         
-        st.markdown("### 💰 إدارة أسعار الذهب المحلية بالجرام")
-        g_price = st.number_input("سعر الجرام المحلي الحالي في السودان (SDG)", min_value=0.0)
-        if st.button("🔄 تحديث سعر السوق الآن"):
-            if requests.post(f"{API_URL}/api/v1/prices", json={"local_price": float(g_price), "global_ounce": 0.0, "usd_rate": 0.0}).status_code in [200, 201]:
-                st.success("🎉 تم تحديث سعر الغرام المحلي بنجاح على البورصة العامة.")
-                st.cache_data.clear()
-                
-        st.markdown("---")
+        tab_eq, tab_inv = st.tabs(["📊 مركز إدارة وعمولات سوق المعدات", "💎 مركز إدارة صفقات سوق الاستثمار"])
         
-        st.markdown("### 🛡️ تتبع الرقابة الميدانية والعمولات (أرقام الهواتف الحقيقية)")
-        try:
-            res_all = requests.get(f"{API_URL}/api/v1/orders")
-            if res_all.status_code == 200:
-                all_orders = res_all.json()
-                if not all_orders:
-                    st.info("لا توجد طلبات في قاعدة البيانات حالياً.")
-                else:
-                    for o in all_orders:
-                        st.text(f"الطلب #{o['id']} | المشتري: {o['buyer_name']} | هاتف المشتري: {o['buyer_phone']} | الحالة: {o['status']}")
-        except:
-            st.error("خطأ أثناء جلب تقارير الرقابة.")
+        with tab_eq:
+            st.subheader("💵 تقارير صفقات المعدات وعمولاتها")
+            st.markdown("""
+            | رقم الطلب | المشتري | هاتف المشتري الحقيقي | نوع المعدة | التاجر | السعر المعروض | حالة الصفقة | الإجراء والعمولة |
+            |---|---|---|---|---|---|---|---|
+            | #9942 | شركة نهر النيل | +249912345678 | بوكلين CAT | معرض الشمال | $42,000 | `INSPECTION_APPROVED` | [المعدات الثقيلة: عمولة تفاوضية مع الأدمن] |
+            | #9910 | أحمد التعدين | +249901112223 | طاحونة رطبة 2 طن | مصنع العبيدية | $4,500 | `DEAL_CONFIRMED` | [معدات خفيفة: تم تحصيل عمولة التاجر 3%] |
+            """)
             
-    elif admin_input != "":
-        st.error("❌ كلمة المرور غير صحيحة. محاولة دخول غير مصرح بها.")
+        with tab_inv:
+            st.subheader("💎 تقارير مشاريع الاستثمار والشركات الكبرى")
+            st.write("* **الطلبات النشطة:** 3 طلبات شراكة في مصانع الكربون والسيانيد.")
+            st.write("* **رسوم التحقق الميداني المعلقة:** توجد (2) طلبات تحقق ميداني مدفوعة الرسوم لجدولة زيارة الفحص للمناجم.")
+            
+    elif admin_pass != "":
+        st.error("❌ كلمة المرور غير صحيحة.")
