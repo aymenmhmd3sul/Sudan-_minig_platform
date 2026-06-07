@@ -1,34 +1,40 @@
 import streamlit as st
 import requests
 
-# 1. إعداد الصفحة وتفعيل المحاذاة لليمين (RTL) لدعم اللغة العربية بشكل احترافي على الهاتف
-st.set_page_config(page_title="منصة تعدين السودان الرقمية", page_icon="⛏️", layout="wide")
+# 1. إعداد الصفحة بشكل احترافي وتفعيل المحاذاة لليمين ودعم الشاشات العريضة
+st.set_page_config(
+    page_title="منصة تعدين السودان الرقمية", 
+    page_icon="⛏️", 
+    layout="wide"
+)
 
+# فتح الماركداون وحقن الستايل بدون أي نصوص برمجية مكسورة
 st.markdown("""
-    <style>
-    /* قلب اتجاه الواجهة بالكامل لليمين */
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {
-        direction: RTL;
-        text-align: right;
-    }
-    div[data-testid="stMarkdownContainer"] p {
-        text-align: right;
-    }
-    .stTextInput input, .stTextArea textarea, .stSelectbox select {
-        direction: RTL;
-        text-align: right;
-    }
-    section[data-testid="stSidebar"] .stRadio > div {
-        direction: RTL;
-        text-align: right;
+<style>
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stSidebarViewContainer"] {
+        direction: RTL !important;
+        text-align: right !important;
     }
     
-    /* 🔥 إخفاء الهيدر الافتراضي، أزرار القائمة، وحاوية التنقل العمودية المتداخلة نهائياً وبلا أثر */
+    div[data-testid="stMarkdownContainer"] p {
+        text-align: right !important;
+    }
+    
+    .stTextInput input, .stTextArea textarea, .stSelectbox select {
+        direction: RTL !important;
+        text-align: right !important;
+    }
+    
+    section[data-testid="stSidebar"] .stRadio > div {
+        direction: RTL !important;
+        text-align: right !important;
+    }
+    
     [data-testid="stHeader"], 
     .stAppHeader, 
     [data-testid="stSidebarCollapse"], 
     [data-testid="stSidebarNav"], 
-    [data-testid="stSidebarNavItems"],
+    [data-testid="stSidebarNavItems"], 
     section[data-testid="stSidebarNav"] {
         display: none !important;
         visibility: hidden !important;
@@ -36,12 +42,11 @@ st.markdown("""
         width: 0px !important;
     }
     
-    /* تحسين تباعد الأسطر للعنوان الرئيسي على الجوال ليظهر بشكل مريح */
     h1, h2, h3 {
         line-height: 1.5 !important;
-        padding-top: 5px !important;
+        padding-top: 10px !important;
     }
-    </style>
+</style>
 """, unsafe_allow_html=True)
 
 # رابط السيرفر الخلفي على ريندر
@@ -53,11 +58,11 @@ API_URL = "https://sudan-mining-platform.onrender.com"
 @st.cache_data(ttl=20)
 def fetch_platform_metrics():
     metrics = {
-        "merchants_count": 7, 
-        "light_equipment": 27, 
-        "heavy_equipment": 14, 
-        "generators": 9,      
-        "logistics": 22,      
+        "merchants_count": 7,
+        "light_equipment": 27,
+        "heavy_equipment": 14,
+        "generators": 9,
+        "logistics": 22,
         "gold_price": "في انتظار التحديث"
     }
     try:
@@ -65,7 +70,7 @@ def fetch_platform_metrics():
         if r_price.status_code == 200:
             prices = r_price.json()
             if prices:
-                metrics["gold_price"] = f"{prices[-1].get('price_sdg', 'في انتظار التحديث')}"
+                metrics["gold_price"] = f"{prices[-1].get('price_sdg', 'في انتظار التحديث')} ج.س"
     except:
         pass
     return metrics
@@ -88,172 +93,98 @@ menu = st.sidebar.radio(
 )
 
 # =========================================================================
-# 1. إحصائيات السوق العامة
+# 1. واجهة إحصائيات السوق الحية
 # =========================================================================
 if menu == "📊 إحصائيات السوق الحية":
     st.header("📈 حجم النشاط والقدرة الاستيعابية للسوق")
     st.write("شبكة ربط لوجستية مغلقة تجمع كبار مستثمري التعدين بأكبر مزودي الخدمات وموردي المعدات في السودان.")
     
     col1, col2, col3 = st.columns(3)
-    col1.metric(label="🏪 شبكة كبار التجار المعتمدين", value=f"{platform_stats['merchants_count']} تجار رئيسيين")
-    col2.metric(label="⚙️ إجمالي المواد والخدمات الجاهزة", value="جاهزة للتلبية")
-    col3.metric(label="💰 سعر جرام الذهب العالمي الحالي", value=platform_stats['gold_price'])
+    with col1:
+        st.metric("🏪 شبكة كبار التجار المعتمدين", f"{platform_stats['merchants_count']} تجار رئيسيين")
+    with col2:
+        st.metric("⚙️ إجمالي المواد والخدمات الجاهزة", "جاهزة للتلبية")
+    with col3:
+        st.metric("💰 سعر جرام الذهب العالمي الحالي", platform_stats['gold_price'])
+        
+    st.markdown("---")
+    st.subheader("🚜 المنظومة اللوجستية المتوفرة حالياً في المخازن:")
     
-    st.markdown("### 🚜 المنظومة اللوجستية المتوفرة حالياً في المخازن:")
-    
-    c1, c2, c3, c4 = st.columns(4)
-    c1.info(f"⚙️ معدات خفيفة\n المتوفر: {platform_stats['light_equipment']} وحدة")
-    c2.info(f"🚜 آليات ثقيلة\n المتوفر: {platform_stats['heavy_equipment']} معدة")
-    c3.info(f"⚡ طاقة ومولدات\n المتوفر: {platform_stats['generators']} وحدة")
-    c4.info(f"💧 خدمات وتموين\n المتوفر: {platform_stats['logistics']} آلية/خدمة")
+    st.info(f"⚙️ معدات خفيفة المتوفر: {platform_stats['light_equipment']} وحدة")
+    st.info(f"🚜 آليات ثقيلة المتوفر: {platform_stats['heavy_equipment']} وحدة")
+    st.info(f"⚡ طاقة ومولدات المتوفر: {platform_stats['generators']} وحدة")
+    st.info(f"💧 خدمات وتموين المتوفر: {platform_stats['logistics']} آلية/خدمة")
     
     st.markdown("---")
-    st.markdown("> 💡 **ملحوظة:** حدد طلبك ومواصفاتك وسيوصلك العرض الأنسب مباشرة برابط خاص ومشفر يحفظ سرية التعامل والأسعار.")
+    st.caption("💡 ملحوظة: حظر طلبات ومواصفات العرض والأسعار مباشرة برابط خاص ومشفر يحفظ سرية التعاملات التجارية لشركاء المنصة.")
 
 # =========================================================================
-# 2. بوابة المشتري
+# 2. بوابة المشتري (طلب معدة أو خدمة)
 # =========================================================================
 elif menu == "👤 اطلب معدة أو خدمة (للمشترين)":
-    st.header("👤 اطلب معدتك أو خدمتك اللوجستية مجاناً")
-    st.write("أدخل تفاصيل خط الإنتاج، الآلية المطلوبة بدقة، وسيقوم الموردون بتقديم عروضهم إليك سرياً وبأفضل سعر منافس.")
+    st.header("📥 تقديم طلب إمداد جديد")
+    st.write("أرسل احتياجاتك مباشرة إلى شبكة الموردين المعتمدين لتلقي عروض الأسعار.")
     
-    if "last_order_id" not in st.session_state:
-        st.session_state.last_order_id = None
+    with st.form("order_form"):
+        o_type = st.selectbox("📦 تصنيف الطلب", ["معدات خفيفة", "آليات ثقيلة", "طاقة ومولدات", "خدمات وتموين"])
+        o_details = st.text_area("📝 تفاصيل ومواصفات الخدمة أو المعدة المطلوبة بدقة")
+        o_loc = st.text_input("📍 موقع التعدين المستهدف (الولاية / المنطقة)")
         
-    if st.session_state.last_order_id:
-        st.success(f"🎉 تم تسجيل طلبك بنجاح برقم آلي مخفي: #{st.session_state.last_order_id}")
-        st.info("👇 عروض الأسعار والصور تظهر حية في نفس الصفحة في الأسفل دون حاجة للبحث.")
-        
-        try:
-            res_bids = requests.get(f"{API_URL}/api/v1/bids/order/{st.session_state.last_order_id}", timeout=5)
-            if res_bids.status_code == 200:
-                bids = res_bids.json()
-                if not bids:
-                    st.warning("⏳ عروض الأسعار ستظهر هنا فور إرسالها من مخازن التجار سرياً...")
-                else:
-                    st.markdown(f"### 🎯 العروض المستلمة ({len(bids)} عروض منافسة مخفية الهوية):")
-                    for idx, bid in enumerate(bids):
-                        with st.container(border=True):
-                            col_l, col_r = st.columns([2, 1])
-                            with col_l:
-                                st.subheader(f"العرض رقم ({idx+1})")
-                                st.markdown(f"#### 💰 السعر المعروض: {bid['price']} ({bid.get('currency', 'SDG')})")
-                                st.write(f"📍 الموقع الحالي للمعاينة والتسليم: {bid.get('location', 'غير محدد')}")
-                                st.write(f"🤝 **التزام العمولة:** {bid.get('commission_status', 'محفوظة للمنصة ومستحقة على التاجر')}")
-                                st.caption("🔒 الأسماء والأرقام تظهر أدناه فور ضغط زر الموافقة والاعتماد لحفظ حقوق الأطراف.")
-                            with col_r:
-                                if bid.get('image_url'):
-                                    st.image(bid['image_url'], use_container_width=True)
-                                else:
-                                    st.info("🖼️ لا توجد صورة مرفقة")
-                                    
-                            if st.button(f"🤝 الاعتماد الفوري وعرض تقرير سجل التفاوض ({bid['id']})"):
-                                requests.put(f"{API_URL}/api/v1/bids/{bid['id']}/accept", timeout=5)
-                                st.balloons()
-                                st.success("🎉 تم اعتماد العرض بنجاح وإغلاق جلسة المزايدة السيرية.")
-                                
-                                st.markdown("### 📊 تقرير النظام المعتمد لسجل التفاوض (دليل العمولة والاتفاق):")
-                                st.code(f"""
-================================================================
-⛏️ تقرير نظام المنصة | سجل التفاوض المخفي والاعتماد
-================================================================
-- معرف الطلب: #{st.session_state.last_order_id} | معرف العرض: #{bid['id']}
-- السعر النهائي المرصود: {bid['price']} {bid.get('currency', 'SDG')}
-- موقع التسليم والتشغيل الميداني: {bid.get('location', 'موقع التاجر المعتمد')}
-----------------------------------------------------------------
-[حساب تحصيل عمولة المنصة بالتراضي - مستحقة على التاجر المورد]
-- بنك الخرطوم (بنكك): 9291029 (أيمن محمد سليمان)
-- هاتف تأكيد الدفع وإرسال إشعار الواتساب: 0912236979
-----------------------------------------------------------------
-يستخدم هذا السجل اللوجستي كتقرير رسمي لإثبات التوافق وضمان دفع العمولة.
-================================================================
-""", language="text")
-        except:
-            st.error("⚠️ خطأ في جلب البيانات")
-            
-        if st.button("🔄 تقديم طلب شراء جديد لآلية أو خدمة أخرى"):
-            st.session_state.last_order_id = None
-            st.rerun()
-            
-    else:
-        with st.form("order_form"):
-            buyer_name = st.text_input("📝 اسم المشترك (الشخص أو الشركة) - سري")
-            buyer_contact = st.text_input("📞 رقم الواتساب أو البريد الإلكتروني")
-            
-            eq_type = st.selectbox(
-                "🚜 فئة المعدة أو الخدمة المطلوبة:",
-                [
-                    "⚙️ معدات خفيفة وأدوات إنتاج (دقاقات، طواحين، أدوات حفر خفيفة)",
-                    "🚜 آليات ومعدات ثقيلة (حفارات، بوكلينات، لودرات، شاحنات)",
-                    "⚡ طاقة ومولدات كهرباء (بمختلف السعات والكابلات)",
-                    "💧 خدمات وتموين لوجستي (تناكر مياه، ترحيل، إعاشة)",
-                    "⛏️ آبار ومواقع تعدين وخطوط إنتاج سيانيد كاملة",
-                    "✨ أخرى / صنف غير مدرج في القائمة"
-                ]
-            )
-            
-            custom_type = st.text_input("✍️ إذا اخترت أخرى، اكتب اسم المعدة أو الخدمة المطلوبة هنا:")
-            required_currency = st.selectbox("💵 العملة المفضلة للسداد وضبط الصفقة:", ["جنيه سوداني (SDG)", "ريال سعودي (SAR)", "دولار أمريكي (USD)"])
-            order_location = st.text_input("📍 منطقة التعدين المستهدفة للطلب (مثال: أبو حمد، العبيدية، دلقو)")
-            specs = st.text_area("📋 المواصفات الفنية المطلوبة وموقع التشغيل المتوقع:")
-            
-            submit = st.form_submit_button("🚀 تعميم الطلب في غرف الموردين")
-            if submit:
-                if (buyer_name) and (buyer_contact) and specs:
-                    final_type = custom_type if eq_type == "✨ أخرى / صنف غير مدرج في القائمة" else eq_type
-                    payload = {
-                        "buyer_name": buyer_name,
-                        "buyer_phone": buyer_contact,
-                        "equipment_type": final_type,
-                        "specifications": f"المنطقة المستهدفة: {order_location} | العملة المطلوبة: {required_currency} | التفاصيل: {specs}"
-                    }
-                    try:
-                        res = requests.post(f"{API_URL}/api/v1/orders", json=payload, timeout=5)
-                        if res.status_code in [200, 201]:
-                            st.session_state.last_order_id = res.json().get('id')
-                            st.rerun()
-                        else:
-                            st.error("⚠️ السيرفر غير مستجيب")
-                    except:
-                        st.error("⚠️ خطأ في الاتصال")
-                else:
-                    st.warning("⚠️ الحقول أساسية (الاسم، وسيلة التواصل، والمواصفات).")
+        submit_order = st.form_submit_button("🚀 إرسال الطلب إلى شبكة التجار")
+        if submit_order:
+            if o_details and o_loc:
+                order_payload = {
+                    "category": o_type,
+                    "details": o_details,
+                    "location": o_loc,
+                    "status": "active"
+                }
+                try:
+                    res = requests.post(f"{API_URL}/api/v1/orders", json=order_payload, timeout=5)
+                    if res.status_code == 201:
+                        st.success("✅ تم تعميم طلبك على شبكة التجار بنجاح! انتظر العروض قريباً.")
+                    else:
+                        st.error("⚠️ فشل في إرسال الطلب، يرجى المحاولة مرة أخرى.")
+                except:
+                    st.error("❌ خطأ في الاتصال بالسيرفر الخلفي.")
+            else:
+                st.warning("⚠️ يرجى ملء حقول تفاصيل الطلب والموقع لتتمكن من الإرسال.")
 
 # =========================================================================
-# 3. بوابة التجار
+# 3. بوابة التجار (مخزن طلبات الشراء)
 # =========================================================================
 elif menu == "🏪 مخزن طلبات الشراء (للتجار المعتمدين)":
     st.header("🏪 لوحة تحكم التجار المعتمدين")
-    st.write("شارك الحصرية سرياً واعرض صور معداتك وموقعها بناءً على طلب المشتري لضمان عدم حرق الأسعار.")
+    st.write("استعرض طلبات الشراء الحالية واعرض معداتك وموقعها بناءً على طلب المشتري لضمان عدم حرق الأسعار.")
     
     try:
         res_orders = requests.get(f"{API_URL}/api/v1/orders", timeout=5)
         if res_orders.status_code == 200:
-            orders = [o for o in res_orders.json() if o.get('status') != 'completed']
+            orders = [o for o in res_orders.json() if o.get('status') == 'active']
             if not orders:
                 st.info("📦 لا توجد طلبات شراء نشطة من الزبائن حالياً.")
             else:
-                for order in orders:
-                    with st.expander(f"📋 طلب آلية/خدمة مطلوبة - معرف الطلب #{order['id']}"):
-                        st.markdown(f"**📑 تفاصيل الاحتياج وموقع الطلب:**\n {order['specifications']}")
-                        st.write(f"📅 **تاريخ الطلب:** {order['created_at']}")
+                for idx, order in enumerate(orders):
+                    with st.expander(f"📋 طلب توريد متاح - معرف الطلب #{order.get('id', idx+1)}"):
+                        st.markdown(f"**📑 تفاصيل الاحتياج وموقع الطلب:** {order.get('details')}")
+                        st.write(f"📅 **تاريخ الطلب:** {order.get('created_at', 'غير محدد')}")
                         st.markdown("---")
                         
-                        with st.form(f"bid_form_{order['id']}"):
-                            m_name = st.selectbox("👤 اسم التاجر/المخزن المورد:", ["مخزن المعدات الخفيفة 1", "مخزن الطاقة والمولدات", "مخزن الآليات الثقيلة", "مخزن الخدمات والتموين"])
-                            m_phone = st.text_input("📞 رقم هاتف التاجر (سري - يظهر للمشتري عند الاعتماد)")
-                            price = st.number_input("💰 السعر المعروض للبيع أو الإيجار الحالي:", min_value=0)
-                            currency = st.selectbox("💵 عملة العرض الفعلي:", ["جنيه سوداني (SDG)", "ريال سعودي (SAR)", "دولار أمريكي (USD)"])
-                            loc = st.text_input("📍 الموقع الحالي للمعدة في السودان")
-                            img = st.text_input("🖼️ رابط صورة المعدة أو حالتها البصرية (إن وجد)")
+                        with st.form(f"bid_form_{order.get('id', idx)}"):
+                            m_name = st.selectbox("👤 اسم التاجر/المؤسسة", ["مجموعة خدمات التعدين والتموين", "الشركة العربية للمعدات"])
+                            m_phone = st.text_input("📞 هاتف التواصل (يظهر للزبون عند الاعتماد)")
+                            price = st.number_input("💰 السعر المعروض لتلبية الطلب", min_value=0)
+                            currency = st.selectbox("💵 العملة", ["ج.س (جنيه سوداني)", "دولار أمريكي"])
+                            loc = st.text_input("📍 الموقع الحالي للمعدة/الخدمة")
+                            img = st.text_input("🔗 رابط صورة المعدة (اختياري)")
                             
-                            st.caption("📝 إرسالك للعرض يمثل التزاماً تاماً وموثقاً بسداد عمولة المنصة المحددة بالتراضي إلى حساب الأستاذ أيمن محمد سليمان فور إغلاق الصفقة.")
+                            st.caption("🔒 يتم حماية السعر والبيانات وإرسالها بشكل سري ومباشر لصاحب الطلب فقط.")
+                            submit_bid = st.form_submit_button("🤝 تقديم العرض المالي واللوجستي")
                             
-                            submit_bid = st.form_submit_button("🎯 إرسال العرض سرياً للمشتري")
                             if submit_bid:
-                                if m_phone and loc and price > 0:
+                                if m_phone and price > 0:
                                     bid_payload = {
-                                        "order_id": order['id'],
+                                        "order_id": order.get('id'),
                                         "merchant_name": m_name,
                                         "merchant_phone": m_phone,
                                         "price": price,
@@ -261,12 +192,15 @@ elif menu == "🏪 مخزن طلبات الشراء (للتجار المعتمد
                                         "location": loc,
                                         "image_url": img
                                     }
-                                    if requests.post(f"{API_URL}/api/v1/bids", json=bid_payload, timeout=5).status_code in [200, 201]:
-                                        st.success("🎯 تم إرسال عرضك المنافس بنجاح وبشكل سري.")
+                                    res_bid = requests.post(f"{API_URL}/api/v1/bids", json=bid_payload, timeout=5)
+                                    if res_bid.status_code == 201:
+                                        st.success("🎯 تم إرسال عرضك بنجاح وبشكل سري 🔒")
+                                    else:
+                                        st.warning("⚠️ عذراً، هناك بيانات مطلوبة لإتمام المزايدة.")
                                 else:
-                                    st.warning("⚠️ الحقول الأساسية مطلوبة لإتمام المزايدة.")
+                                    st.error("⚠️ يرجى تعبئة رقم الهاتف والسعر لتقديم العرض.")
     except:
-        st.error("⚠️ خطأ في الاتصال بالمنصة الخلفية")
+        st.error("❌ خطأ في الاتصال بالمنصة الخلفية لجلب الطلبات.")
 
 # =========================================================================
 # 4. إدارة المواقع والأسعار
@@ -277,20 +211,39 @@ elif menu == "🗺️ مواقع التعدين وبورصة الذهب":
     col_a, col_b = st.columns(2)
     with col_a:
         st.subheader("➕ إضافة موقع تعدين أو إنتاج")
-        s_name = st.text_input("📌 اسم موقع التعدين الجديد:")
-        s_state = st.text_input("📍 الولاية / المنطقة التابعة لها:")
+        s_name = st.text_input("📌 اسم موقع التعدين الجديد")
+        s_state = st.text_input("📍 الولاية/المنطقة التابعة لها")
+        
         if st.button("💾 حفظ الموقع الميداني"):
             if s_name and s_state:
-                if requests.post(f"{API_URL}/api/v1/sites", json={"name": s_name, "state": s_state}, timeout=5).status_code in [200, 201]:
-                    st.success("✔️ تم الحفظ بنجاح في قاعدة البيانات.")
-                    
+                site_payload = {"name": s_name, "state": s_state}
+                try:
+                    res_site = requests.post(f"{API_URL}/api/v1/sites", json=site_payload, timeout=5)
+                    if res_site.status_code == 201:
+                        st.success("✔️ تمت إضافة الموقع إلى قاعدة البيانات")
+                    else:
+                        st.error("❌ فشل حفظ الموقع.")
+                except:
+                    st.error("❌ السيرفر الخلفي لا يستجيب.")
+            else:
+                st.warning("⚠️ يرجى ملء كافة الحقول.")
+                
     with col_b:
-        st.subheader("💰 تحديث بورصة أسعار الذهب اللحظية والمحلية")
-        gold_region = st.text_input("📍 المنطقة الخاصة بالتسعير المحلي:")
-        g_price = st.number_input("💵 سعر الجرام الحالي بالمنطقة (ج.س):", min_value=0)
+        st.subheader("💰 تحديث أسعار الذهب اللحظية والمحلية")
+        gold_region = st.text_input("📍 البورصة المحلية (مثال: الخرطوم، نهر النيل)")
+        g_price = st.number_input("💵 سعر جرام الذهب عيار 21 (ج.س)", min_value=0)
+        
         if st.button("🔄 تحديث السعر والبورصة الآن"):
             if gold_region and g_price > 0:
-                payload_price = {"price_sdg": f"جرام عيار 21 في {gold_region}: {g_price} ج.س"}
-                if requests.post(f"{API_URL}/api/v1/prices", json=payload_price, timeout=5).status_code in [200, 201]:
-                    st.success("🎉 تم تحديث البورصة حية في لوحة المؤشرات.")
-                    st.cache_data.clear()
+                price_payload = {"region": gold_region, "price_sdg": g_price}
+                try:
+                    res_p = requests.post(f"{API_URL}/api/v1/prices", json=price_payload, timeout=5)
+                    if res_p.status_code == 201:
+                        st.success("✅ تم تحديث بورصة أسعار الذهب بنجاح وبثها على المنصة")
+                        st.rerun()
+                    else:
+                        st.error("❌ فشل التحديث.")
+                except:
+                    st.error("❌ خطأ في الوصول للسيرفر.")
+            else:
+                st.warning("⚠️ يرجى تحديد المنطقة والسعر الصحيح.")
