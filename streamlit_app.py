@@ -14,18 +14,13 @@ st.set_page_config(
 )
 
 # =========================
-# 🎨 تصميم بصري احترافي
+# 🎨 تصميم بصري
 # =========================
 st.markdown("""
 <style>
-.main {
-    background-color: #0B0F14;
-    color: white;
-}
+.main { background-color: #0B0F14; color: white; }
 
-h1, h2, h3 {
-    color: #D4AF37 !important;
-}
+h1, h2, h3 { color: #D4AF37 !important; }
 
 .stMetric {
     background-color: #111827;
@@ -48,90 +43,103 @@ section[data-testid="stSidebar"] {
 """, unsafe_allow_html=True)
 
 # =========================
-# إعدادات النظام
+# النظام
 # =========================
 API_URL = "https://sudan-mining-platform.onrender.com"
 ADMIN_PASSWORD = "Ayman_Secure_2026"
 
 # =========================
-# أدوات مساعدة
+# محاكاة سوق حي
 # =========================
-def filter_contact_info(text):
-    if not text:
-        return text
-    return re.sub(r'\b\d{7,14}\b', "[محجوب]", text)
-
-def generate_whatsapp_trigger(order_id, category, specs):
-    msg = f"""⛏️ طلب جديد #{order_id}
-الفئة: {category}
-المواصفات: {specs}"""
-    return "https://wa.me/?text=" + urllib.parse.quote(msg)
+@st.cache_data(ttl=10)
+def live_gold_price():
+    base = 115000
+    change = random.randint(-900, 1200)
+    return {
+        "price": base + change,
+        "change": change
+    }
 
 @st.cache_data(ttl=30)
 def fetch_market_prices():
     return {
-        "local": "115,000 SDG",
         "global": "75.56 USD"
     }
 
+# =========================
+# أدوات
+# =========================
+def generate_whatsapp_trigger(order_id, category, specs):
+    msg = f"طلب #{order_id} - {category} - {specs}"
+    return "https://wa.me/?text=" + urllib.parse.quote(msg)
+
+# =========================
+# البيانات
+# =========================
 prices = fetch_market_prices()
 
 # =========================
-# HEADER
+# واجهة
 # =========================
 st.title("⛏️ منصة تعدين السودان الرقمية")
-st.caption("بورصة الذهب والمعدات والفرص الاستثمارية")
+st.caption("بورصة ذهب ومعدات وفرص استثمارية")
 st.markdown("---")
 
-# =========================
-# SIDEBAR
-# =========================
 menu = st.sidebar.radio(
     "📌 القائمة",
-    [
-        "📊 السوق المالي",
-        "🚜 المعدات الثقيلة",
-        "💎 الفرص الاستثمارية",
-        "🔐 الإدارة"
-    ]
+    ["📊 السوق المالي", "🚜 المعدات", "💎 الفرص", "🔐 الإدارة"]
 )
 
 # =========================
-# 1) السوق المالي
+# 1) السوق المالي (LIVE)
 # =========================
 if menu == "📊 السوق المالي":
 
-    st.subheader("📈 أسعار الذهب الحية")
+    st.subheader("📈 السوق الحي للذهب")
+
+    data = live_gold_price()
+    price = data["price"]
+    change = data["change"]
 
     c1, c2, c3, c4 = st.columns(4)
 
-    c1.metric("🇸🇩 المحلي", prices["local"])
+    c1.metric("🇸🇩 المحلي", f"{price:,} SDG", f"{change:+}")
     c2.metric("🌍 العالمي", prices["global"])
-    c3.metric("📊 الاتجاه", "صاعد 🔥")
-    c4.metric("⚡ التحديث", "30s")
-
-    st.markdown("---")
-    st.info("نظام سوق ذهبي مباشر لعرض الأسعار والتحركات في الوقت الحقيقي.")
-
-# =========================
-# 2) المعدات الثقيلة
-# =========================
-elif menu == "🚜 المعدات الثقيلة":
-
-    st.subheader("🚜 سوق المعدات والآليات")
-
-    action = st.radio("الدور:", ["مشتري", "تاجر"])
+    c3.metric("📊 الاتجاه", "صعود 🔥" if change > 0 else "هبوط 🔻")
+    c4.metric("⚡ تحديث", "LIVE")
 
     st.markdown("---")
 
-    # ---------- المشتري ----------
-    if action == "مشتري":
+    st.markdown("### 📊 حركة السعر")
+
+    history = [price + random.randint(-500, 500) for _ in range(20)]
+    st.line_chart(history)
+
+    if change > 800:
+        st.success("🚀 ارتفاع قوي")
+    elif change < -800:
+        st.error("⚠️ هبوط قوي")
+    else:
+        st.info("📊 حركة طبيعية")
+
+# =========================
+# 2) المعدات
+# =========================
+elif menu == "🚜 المعدات":
+
+    st.subheader("🚜 سوق المعدات")
+
+    role = st.radio("الدور:", ["مشتري", "تاجر"])
+
+    st.markdown("---")
+
+    if role == "مشتري":
 
         if "order_id" not in st.session_state:
             st.session_state.order_id = None
 
         if st.session_state.order_id:
-            st.success(f"تم إنشاء طلب #{st.session_state.order_id}")
+            st.success(f"طلب رقم #{st.session_state.order_id}")
 
             link = generate_whatsapp_trigger(
                 st.session_state.order_id,
@@ -139,13 +147,7 @@ elif menu == "🚜 المعدات الثقيلة":
                 st.session_state.specs
             )
 
-            st.markdown(f"""
-            <a href="{link}" target="_blank">
-            <button style="background:#25D366;color:white;padding:12px;border-radius:8px;">
-            إرسال الطلب للتجار
-            </button>
-            </a>
-            """, unsafe_allow_html=True)
+            st.markdown(f"[📤 إرسال للتجار]({link})")
 
             if st.button("طلب جديد"):
                 st.session_state.order_id = None
@@ -155,16 +157,15 @@ elif menu == "🚜 المعدات الثقيلة":
             with st.form("buyer"):
                 name = st.text_input("الاسم")
                 phone = st.text_input("الواتساب")
-                cat = st.selectbox("الفئة", ["بوكلين", "لودر", "مولد", "طواحين"])
+                cat = st.selectbox("الفئة", ["بوكلين", "لودر", "مولد"])
                 specs = st.text_area("المواصفات")
 
-                if st.form_submit_button("نشر الطلب") and name and phone:
+                if st.form_submit_button("نشر") and name and phone:
                     st.session_state.order_id = random.randint(1000, 9999)
                     st.session_state.cat = cat
                     st.session_state.specs = specs
                     st.rerun()
 
-    # ---------- التاجر ----------
     else:
 
         st.subheader("غرفة العروض")
@@ -175,53 +176,39 @@ elif menu == "🚜 المعدات الثقيلة":
             st.success("تم الدخول")
 
             with st.form("offer"):
-                c1, c2 = st.columns(2)
-
-                make = c1.text_input("الشركة")
-                model = c2.text_input("الموديل")
-
-                year = st.number_input("السنة", 2000, 2026, 2018)
+                make = st.text_input("الشركة")
+                model = st.text_input("الموديل")
                 price = st.number_input("السعر")
 
-                notes = st.text_area("ملاحظات")
-
-                if st.form_submit_button("إرسال العرض"):
-                    st.success("تم إرسال العرض للمشتري")
+                if st.form_submit_button("إرسال"):
+                    st.success("تم الإرسال")
 
 # =========================
-# 3) الفرص الاستثمارية
+# 3) الفرص
 # =========================
-elif menu == "💎 الفرص الاستثمارية":
+elif menu == "💎 الفرص":
 
     st.subheader("💎 مشاريع استثمارية")
 
     st.markdown("""
-    ### 🏭 مصنع تعدين جاهز
-    - موقع: نهر النيل  
-    - حالة: جاهز للتشغيل  
-    - نوع: شراكة
+    🏭 مصنع تعدين جاهز  
+    📍 نهر النيل  
     """)
 
     if st.button("طلب اهتمام"):
-        st.success("تم تسجيل اهتمامك")
+        st.success("تم تسجيلك")
 
 # =========================
 # 4) الإدارة
 # =========================
 elif menu == "🔐 الإدارة":
 
-    st.subheader("لوحة التحكم")
-
     pw = st.text_input("كلمة المرور", type="password")
 
     if pw == ADMIN_PASSWORD:
         st.success("تم الدخول")
 
-        st.table({
-            "طلب": ["#1001"],
-            "حالة": ["نشط"],
-            "عمولة": ["قيد الحساب"]
-        })
+        st.table({"طلب": ["#1001"], "حالة": ["نشط"]})
 
     elif pw:
-        st.error("خطأ في كلمة المرور")
+        st.error("خطأ")
