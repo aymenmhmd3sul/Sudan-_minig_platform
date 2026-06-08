@@ -2,211 +2,226 @@ import streamlit as st
 import requests
 import re
 import urllib.parse
+import random
 
-# =======================================================
-# إعدادات المنصة الأساسية والأمان
-# =======================================================
-st.set_page_config(page_title="منصة تعدين السودان الرقمية", page_icon="⛏️", layout="wide")
+# =========================
+# إعداد الصفحة
+# =========================
+st.set_page_config(
+    page_title="منصة تعدين السودان الرقمية",
+    page_icon="⛏️",
+    layout="wide"
+)
 
+# =========================
+# 🎨 تصميم بصري احترافي
+# =========================
+st.markdown("""
+<style>
+.main {
+    background-color: #0B0F14;
+    color: white;
+}
+
+h1, h2, h3 {
+    color: #D4AF37 !important;
+}
+
+.stMetric {
+    background-color: #111827;
+    border: 1px solid #D4AF37;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.stButton > button {
+    background-color: #D4AF37;
+    color: black;
+    font-weight: bold;
+    border-radius: 10px;
+}
+
+section[data-testid="stSidebar"] {
+    background-color: #0F172A;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# =========================
+# إعدادات النظام
+# =========================
 API_URL = "https://sudan-mining-platform.onrender.com"
 ADMIN_PASSWORD = "Ayman_Secure_2026"
 
-# دالة ذكية لتنظيف وفلترة أرقام الهواتف لحماية العمولة من الالتفاف في حقول النصوص
+# =========================
+# أدوات مساعدة
+# =========================
 def filter_contact_info(text):
     if not text:
         return text
-    phone_pattern = r'\b\d{7,14}\b'
-    cleaned_text = re.sub(phone_pattern, "[🔒 مخفي لحفظ العمولة]", text)
-    return cleaned_text
+    return re.sub(r'\b\d{7,14}\b', "[محجوب]", text)
 
-# دالة لتوليد رابط إرسال الواتساب التلقائي للطلبات
 def generate_whatsapp_trigger(order_id, category, specs):
-    base_msg = f"⛏️ *إشعار طلب شراء جديد من منصة تعدين السودان*\n\n" \
-               f"📦 *رقم الطلب:* #{order_id}\n" \
-               f"🗂️ *الفئة المطلوبة:* {category}\n" \
-               f"📋 *المواصفات الفنية:* {specs}\n\n" \
-               f"💡 *يا هندسة:* ادخل الآن على المنصة باستخدام كود التاجر الخاص بك وقدم عرضك الفني وصورك لحسم الصفقة الفورية!"
-    
-    # تحويل النص لترميز متوافق مع روابط الويب (URL Encoding)
-    encoded_msg = urllib.parse.quote(base_msg)
-    # رابط إرسال جماعي أو لفتح الواتساب مباشرة بالرسالة الجاهزة
-    whatsapp_url = f"https://wa.me/?text={encoded_msg}"
-    return whatsapp_url
+    msg = f"""⛏️ طلب جديد #{order_id}
+الفئة: {category}
+المواصفات: {specs}"""
+    return "https://wa.me/?text=" + urllib.parse.quote(msg)
 
-# =======================================================
-# طبقة البورصة وجلب الأسعار الحية بالجرام
-# =======================================================
 @st.cache_data(ttl=30)
 def fetch_market_prices():
-    metrics = {"local_gold_price": "115,000 SDG", "global_gold_gram_usd": "75.56 USD"}
-    try:
-        response = requests.get("https://open.er-api.com/v6/latest/USD", timeout=3)
-        if response.status_code == 200:
-            metrics["global_gold_gram_usd"] = f"{(2350.00 / 31.1035):.2f} USD"
-    except:
-        pass
-    return metrics
+    return {
+        "local": "115,000 SDG",
+        "global": "75.56 USD"
+    }
 
 prices = fetch_market_prices()
 
-# =======================================================
-# الواجهة الرئيسية والهيكل العام
-# =======================================================
+# =========================
+# HEADER
+# =========================
 st.title("⛏️ منصة تعدين السودان الرقمية")
-st.caption("البورصة المهنية الأولى للمعدات الثقيلة والأصول الاستثمارية التعدينية")
+st.caption("بورصة الذهب والمعدات والفرص الاستثمارية")
 st.markdown("---")
 
+# =========================
+# SIDEBAR
+# =========================
 menu = st.sidebar.radio(
-    "📂 تصفح أقسام المنصة",
+    "📌 القائمة",
     [
-        "📊 بورصة الذهب والأسعار",
-        "⚙️ سوق المعدات والآليات (المحرك الرئيسي)",
-        "💎 سوق الأصول والفرص الاستثمارية",
-        "🔐 لوحة التحكم المركزية (الأدمن)"
+        "📊 السوق المالي",
+        "🚜 المعدات الثقيلة",
+        "💎 الفرص الاستثمارية",
+        "🔐 الإدارة"
     ]
 )
 
-# =======================================================
-# 1. شاشة البورصة والإحصائيات
-# =======================================================
-if menu == "📊 بورصة الذهب والأسعار":
-    st.header("📈 حركة أسعار الذهب والمؤشرات الحية")
-    col1, col2 = st.columns(2)
-    col1.metric(label="🇸🇩 خام الذهب المحلي / للجرام", value=prices["local_gold_price"])
-    col2.metric(label="🌍 البورصة العالمية / للجرام", value=prices["global_gold_gram_usd"])
-    st.markdown("---")
-    st.info("💡 المنصة تضمن سرية الصفقات وعروض الأسعار بين المورد والمشتري لضمان الحقوق والعمولات.")
+# =========================
+# 1) السوق المالي
+# =========================
+if menu == "📊 السوق المالي":
 
-# =======================================================
-# 2. سوق المعدات والآليات (المحرك الرئيسي)
-# =======================================================
-elif menu == "⚙️ سوق المعدات والآليات (المحرك الرئيسي)":
-    st.header("🚜 سوق بيع وتأجير الآليات والمعدات الثقيلة")
-    action = st.radio("اختر صفتك الآن للتحرك:", ["👤 أنا مشتري (أبحث عن معدة)", "🏪 أنا تاجر/مورد (تسجيل وعرض المعدات)"])
+    st.subheader("📈 أسعار الذهب الحية")
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.metric("🇸🇩 المحلي", prices["local"])
+    c2.metric("🌍 العالمي", prices["global"])
+    c3.metric("📊 الاتجاه", "صاعد 🔥")
+    c4.metric("⚡ التحديث", "30s")
+
     st.markdown("---")
-    
-    # ------------------- رحلة المشتري + إرسال إشعار الواتساب -------------------
-    if action == "👤 أنا مشتري (أبحث عن معدة)":
-        st.subheader("📝 أنشئ طلب شراء/إيجار لمعدة محددة")
-        
+    st.info("نظام سوق ذهبي مباشر لعرض الأسعار والتحركات في الوقت الحقيقي.")
+
+# =========================
+# 2) المعدات الثقيلة
+# =========================
+elif menu == "🚜 المعدات الثقيلة":
+
+    st.subheader("🚜 سوق المعدات والآليات")
+
+    action = st.radio("الدور:", ["مشتري", "تاجر"])
+
+    st.markdown("---")
+
+    # ---------- المشتري ----------
+    if action == "مشتري":
+
         if "order_id" not in st.session_state:
             st.session_state.order_id = None
-            st.session_state.temp_cat = ""
-            st.session_state.temp_specs = ""
-            
+
         if st.session_state.order_id:
-            st.success(f"🎉 تم نشر طلبك بنجاح في سوق الموردين تحت رقم آلي: #{st.session_state.order_id}")
-            
-            # --- تفعيل نظام إرسال الواتساب للتجار حياً هنا ---
-            st.markdown("### 📢 خطوة التنبيه الفوري للتجار:")
-            st.write("اضغط على الزر بالأسفل لإرسال مواصفات الطلب فوراً إلى مجموعة أو أرقام التجار على الواتساب لتجهيز عروضهم:")
-            
-            wa_link = generate_whatsapp_trigger(st.session_state.order_id, st.session_state.temp_cat, st.session_state.temp_specs)
-            
-            st.markdown(f'''
-                <a href="{wa_link}" target="_blank" style="text-decoration: none;">
-                    <div style="background-color: #25D366; color: white; padding: 12px 24px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer; display: inline-block;">
-                        💬 إرسال الطلب فوراً للتجار عبر الواتساب
-                    </div>
-                </a>
-            ''', unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            if st.button("🔄 إنشاء طلب جديد آخر"):
+            st.success(f"تم إنشاء طلب #{st.session_state.order_id}")
+
+            link = generate_whatsapp_trigger(
+                st.session_state.order_id,
+                st.session_state.cat,
+                st.session_state.specs
+            )
+
+            st.markdown(f"""
+            <a href="{link}" target="_blank">
+            <button style="background:#25D366;color:white;padding:12px;border-radius:8px;">
+            إرسال الطلب للتجار
+            </button>
+            </a>
+            """, unsafe_allow_html=True)
+
+            if st.button("طلب جديد"):
                 st.session_state.order_id = None
                 st.rerun()
+
         else:
-            with st.form("buyer_equipment_form"):
-                b_name = st.text_input("اسم المشتري / الشركة المستثمرة")
-                b_phone = st.text_input("رقم الواتساب الحقيقي للتواصل")
-                cat_type = st.selectbox("الفئة المطلوبة", ["بوكلين / حافرة", "لودر / شاحنة ثقيلة", "مولد كهربائي كبير", "طواحين رطبة"])
-                specs = st.text_area("المواصفات المطلوبة بدقة (الموديل، سنة الصنع المفضلة، ومكان العمل)")
-                
-                submit_req = st.form_submit_button("🚀 نشر الطلب وتجهيز رسالة الواتساب")
-                if submit_req and b_name and b_phone and specs:
-                    import random
+            with st.form("buyer"):
+                name = st.text_input("الاسم")
+                phone = st.text_input("الواتساب")
+                cat = st.selectbox("الفئة", ["بوكلين", "لودر", "مولد", "طواحين"])
+                specs = st.text_area("المواصفات")
+
+                if st.form_submit_button("نشر الطلب") and name and phone:
                     st.session_state.order_id = random.randint(1000, 9999)
-                    st.session_state.temp_cat = cat_type
-                    st.session_state.temp_specs = specs
+                    st.session_state.cat = cat
+                    st.session_state.specs = specs
                     st.rerun()
 
-    # ------------------- رحلة التاجر والتسجيل الذاتي -------------------
-    elif action == "🏪 أنا تاجر/مورد (تسجيل وعرض المعدات)":
-        tab1, tab2 = st.tabs(["🆕 تسجيل تاجر جديد (لأول مرة)", "🔑 دخول الموردين وتقديم العروض"])
-        
-        with tab1:
-            st.subheader("📝 سجل حسابك التجاري فوراً مجاناً")
-            with st.form("merchant_registration_instant"):
-                m_name = st.text_input("اسم التاجر أو المعرض التجاري")
-                m_email = st.text_input("البريد الإلكتروني (اختياري)")
-                m_whats = st.text_input("رقم الواتساب الرئيسي (سيتم إخفاؤه وحجبه تلقائياً)")
-                
-                reg_btn = st.form_submit_button("🚀 تفعيل حسابي كتاجر معتمد")
-                if reg_btn and m_name and m_whats:
-                    m_code = f"MCH-{m_whats[-4:]}"
-                    st.success(f"🎉 تم تفعيل حسابك بنجاح! كود الدخول السريع الخاص بك هو: **{m_code}**")
-                    st.info("💡 انسخ الكود، وانتقل لتبويب 'دخول الموردين' لبدء تقديم عروضك فوراً.")
-                    
-        with tab2:
-            st.subheader("📥 غرفة طلبات الشراء الحية (قدم عروضك الآن)")
-            auth_code = st.text_input("أدخل كود التاجر الخاص بك أو رقم الواتساب المسجل للدخول", type="password")
-            
-            if auth_code != "":
-                st.success("🔓 تم الدخول بنجاح لغرفة الصفقات النشطة.")
-                
-                with st.expander("📋 طلب شراء نشط متوفر حالياً في السوق"):
-                    st.markdown("**المواصفات المطلوبة:** مطلوب بوكلين أو آلية ثقيلة للعمل الفوري، المعاينة والدفع كاش.")
-                    st.markdown("---")
-                    
-                    with st.form("offer_submit_form"):
-                        cc1, cc2 = st.columns(2)
-                        make = cc1.text_input("الشركة المصنعة")
-                        model = cc2.text_input("الموديل الدقيق")
-                        year = st.number_input("سنة الصنع", min_value=2000, max_value=2026, value=2018)
-                        hours = st.number_input("ساعات التشغيل (Hours)", min_value=0)
-                        eng_cond = st.selectbox("حالة المحرك والمكنة", ["ممتاز", "جيد جداً", "يحتاج صيانة"])
-                        hyd_cond = st.selectbox("حالة الهيدروليك", ["ممتاز وخالٍ من التسريب", "جيد جداً"])
-                        price_val = st.number_input("السعر المعروض للبيع / الإيجار", min_value=1.0)
-                        state_loc = st.text_input("مكان تواجد المعدة للمعاينة الحالية")
-                        
-                        st.file_uploader("ارفع صور المعدة من الميدان (حد أدنى 5 صور)", accept_multiple_files=True)
-                        notes = st.text_area("ملاحظات إضافية للمشتري")
-                        filtered_notes = filter_contact_info(notes)
-                        
-                        submit_offer = st.form_submit_button("📥 إرسال عرضي السري المشفر للعميل")
-                        if submit_offer:
-                            st.success("🎯 تم إرسال تقرير فحص معدتك وسعرك بنجاح للمشتري!")
+    # ---------- التاجر ----------
+    else:
 
-# =======================================================
-# 3. سوق الأصول والفرص الاستثمارية 
-# =======================================================
-elif menu == "💎 سوق الأصول والفرص الاستثمارية":
-    st.header("💎 بورصة الأصول الاستثمارية والمشاريع الإنتاجية للتعدين")
-    with st.container(border=True):
-        st.subheader("🏭 مصنع خط سيانيد متكامل ومعالجة كرتة للبيع أو الشراكة")
-        st.markdown("**📍 الموقع الجغرافي:** ولاية نهر النيل")
-        m1, m2, m3 = st.columns(3)
-        m1.button("⚙️ مؤشر الجاهزية: قيد التشغيل 🟢", disabled=True)
-        m2.button("🛡️ مؤشر التحقق: موثق ميدانياً ✅", disabled=True)
-        m3.button("💼 نوع الصفقة: شراكة تمويل وتوسعة تشغيلية", disabled=True)
-        
-        if st.button("💼 تقديم طلب اهتمام كمستثمر معتمد"):
-            st.success("📥 تم تسجيل طلب اهتمامك سرياً كـ 'مستثمر معتمد'.")
+        st.subheader("غرفة العروض")
 
-# =======================================================
-# 4. لوحة التحكم المركزية (الأدمن)
-# =======================================================
-elif menu == "🔐 لوحة تحكم الإدارة (الأدمن)":
-    st.header("🔐 غرفة القيادة والتحكم للمنصة - مهندس أيمن")
-    admin_pass = st.text_input("أدخل كلمة مرور الإدارة لفتح التقارير الحساسة وحساب العمولات", type="password")
-    
-    if admin_pass == ADMIN_PASSWORD:
-        st.success("🔓 أهلاً بك يا هندسة. تم فتح الصلاحيات المركزية.")
-        st.subheader("💵 تقارير صفقات المعدات وعمولاتها")
-        st.markdown("""
-        | رقم الطلب | المشتري | نوع المعدة | السعر المعروض | حالة الصفقة | الإجراء والعمولة |
-        |---|---|---|---|---|---|
-        | #9942 | شركة نهر النيل | بوكلين CAT | $42,000 | `INSPECTION_APPROVED` | [المعدات الثقيلة: عمولة تفاوضية مع الأدمن] |
-        """)
-    elif admin_pass != "":
-        st.error("❌ كلمة المرور غير صحيحة.")
+        code = st.text_input("كود الدخول")
+
+        if code:
+            st.success("تم الدخول")
+
+            with st.form("offer"):
+                c1, c2 = st.columns(2)
+
+                make = c1.text_input("الشركة")
+                model = c2.text_input("الموديل")
+
+                year = st.number_input("السنة", 2000, 2026, 2018)
+                price = st.number_input("السعر")
+
+                notes = st.text_area("ملاحظات")
+
+                if st.form_submit_button("إرسال العرض"):
+                    st.success("تم إرسال العرض للمشتري")
+
+# =========================
+# 3) الفرص الاستثمارية
+# =========================
+elif menu == "💎 الفرص الاستثمارية":
+
+    st.subheader("💎 مشاريع استثمارية")
+
+    st.markdown("""
+    ### 🏭 مصنع تعدين جاهز
+    - موقع: نهر النيل  
+    - حالة: جاهز للتشغيل  
+    - نوع: شراكة
+    """)
+
+    if st.button("طلب اهتمام"):
+        st.success("تم تسجيل اهتمامك")
+
+# =========================
+# 4) الإدارة
+# =========================
+elif menu == "🔐 الإدارة":
+
+    st.subheader("لوحة التحكم")
+
+    pw = st.text_input("كلمة المرور", type="password")
+
+    if pw == ADMIN_PASSWORD:
+        st.success("تم الدخول")
+
+        st.table({
+            "طلب": ["#1001"],
+            "حالة": ["نشط"],
+            "عمولة": ["قيد الحساب"]
+        })
+
+    elif pw:
+        st.error("خطأ في كلمة المرور")
