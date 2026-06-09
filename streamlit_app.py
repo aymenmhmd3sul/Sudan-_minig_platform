@@ -1,65 +1,57 @@
 import streamlit as st
-from services import get_gold_prices
 
-st.set_page_config(page_title="منصة تعدين السودان", layout="wide")
+st.set_page_config(
+page_title="منصة تعدين السودان الرقمية",
+layout="wide"
+)
 
-# ====== SIDEBAR ======
-st.sidebar.title("📌 القائمة")
+st.sidebar.title("القائمة الرئيسية")
 
-page = st.sidebar.radio("التنقل", [
-    "📊 الداشبورد",
-    "🛒 السوق",
-    "👤 المستخدم"
-])
+page = st.sidebar.radio(
+"اختر القسم",
+[
+"📊 الداشبورد",
+"🛒 المشتري",
+"🏪 التاجر",
+"🤝 الصفقات",
+"⭐ التجار المؤسسون",
+"⚙️ معلومات النظام"
+]
+)
 
-user_type = st.sidebar.selectbox("نوع المستخدم", [
-    "مشتري",
-    "تاجر"
-])
-
-# ====== DATA ======
-data = get_gold_prices()
-
-# ====== DASHBOARD ======
 if page == "📊 الداشبورد":
-    st.title("📊 لوحة الأسعار")
+st.title("📊 منصة تعدين السودان الرقمية")
+st.info("مرحلة الاستقرار والتجهيز للتشغيل الفعلي")
 
-    col1, col2, col3 = st.columns(3)
+elif page == "🛒 المشتري":
+st.title("🛒 قسم المشتري")
+st.text_input("ما الذي تريد شراءه؟")
+st.text_area("وصف الطلب")
 
-    col1.metric("🇸🇩 المحلي", f"{data['local']} SDG")
-    col2.metric("🌍 العالمي", f"{data['global']} USD")
-    col3.metric("📊 الاتجاه", data['direction'])
+elif page == "🏪 التاجر":
+st.title("🏪 قسم التاجر")
+st.text_input("اسم التاجر")
+st.text_input("رقم الهاتف")
+st.selectbox(
+"نوع النشاط",
+[
+"معدات خفيفة",
+"معدات ثقيلة",
+"ذهب",
+"نقل",
+"خدمات"
+]
+)
 
-    st.line_chart([
-        data['local'] - 150,
-        data['local'] - 80,
-        data['local']
-    ])
+elif page == "🤝 الصفقات":
+st.title("🤝 الصفقات")
+st.write("لا توجد صفقات حالياً")
 
-# ====== MARKET ======
-elif page == "🛒 السوق":
-    st.title("🛒 السوق")
+elif page == "⭐ التجار المؤسسون":
+st.title("⭐ التجار المؤسسون")
+st.success("أول 50 تاجراً يحصلون على خصم 10%")
 
-    st.subheader("المعدات المتاحة")
+elif page == "⚙️ معلومات النظام":
+st.title("⚙️ معلومات النظام")
+st.write("حالة المنصة: تعمل")
 
-    category = st.selectbox("تصنيف المعدات", [
-        "معدات خفيفة",
-        "معدات ثقيلة",
-        "أخرى (بحث حر)"
-    ])
-
-    search = st.text_input("ابحث عن أي معدات")
-
-    if user_type == "مشتري":
-        st.info("عرض خاص للمشتري")
-    else:
-        st.success("لوحة التاجر")
-
-    st.button("طلب / إضافة إعلان")
-
-# ====== USER ======
-else:
-    st.title("👤 المستخدم")
-
-    st.write("نوع الحساب:", user_type)
-    st.write("حالة النظام: نشط")
