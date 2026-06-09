@@ -1,9 +1,9 @@
 import streamlit as st
 
-st.set_page_config(page_title="منصة تعدين السودان", layout="wide")
+st.set_page_config(page_title="منصة تعدين السودان الرقمية", layout="wide")
 
 # ===== SIDEBAR =====
-st.sidebar.title("📌 التحكم")
+st.sidebar.title("📌 القائمة")
 
 page = st.sidebar.radio(
     "التنقل",
@@ -13,32 +13,22 @@ page = st.sidebar.radio(
 # ===== DASHBOARD =====
 if page == "📊 الداشبورد":
     st.title("📊 الداشبورد")
-    st.success("النظام مستقر ويعمل الآن")
+    st.success("النظام يعمل بشكل طبيعي")
 
 # ===== BUYER =====
 elif page == "🛒 المشتري":
     st.title("🛒 المشتري")
-
-    category = st.selectbox(
-        "نوع الطلب",
-        ["معدات خفيفة", "معدات ثقيلة", "أخرى (بحث حر)"]
-    )
-
-    search = st.text_input("ابحث عن المنتج")
-
-    st.write("النتائج ستظهر هنا حسب التاجر")
+    st.selectbox("نوع المعدات", ["معدات خفيفة", "معدات ثقيلة"])
 
 # ===== SELLER =====
 elif page == "🏪 التاجر":
     st.title("🏪 التاجر")
-    st.info("لوحة التاجر - إدارة المنتجات")
 
 # ===== DEALS =====
 elif page == "🤝 الصفقات":
     st.title("🤝 الصفقات")
-    st.warning("الصفقات النشطة ستظهر هنا")
 
 # ===== SYSTEM =====
 elif page == "⚙️ النظام":
     st.title("⚙️ معلومات النظام")
-    st.write("حالة السيرفر: يعمل")
+    st.info("النظام يعمل بشكل مستقر")
