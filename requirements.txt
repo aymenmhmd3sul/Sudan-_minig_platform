@@ -3,3 +3,5 @@ fastapi
 uvicorn
 sqlmodel
 psycopg2-binary
+requests
+streamlit-autorefresh
