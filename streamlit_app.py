@@ -1,8 +1,12 @@
 import streamlit as st
-import time
+from streamlit.runtime.scriptrunner import get_script_run_ctx
+from streamlit_autorefresh import st_autorefresh
 from services import get_gold_prices
 
 st.set_page_config(page_title="منصة تعدين السودان الرقمية", layout="wide")
+
+# ⏱️ تحديث تلقائي كل 3 ثواني
+st_autorefresh(interval=3000, limit=None, key="refresh")
 
 st.title("📊 منصة تعدين السودان الرقمية")
 st.subheader("نظام سوق الذهب والمعدات - LIVE")
@@ -19,6 +23,3 @@ col4.metric("⚡ الحالة", "LIVE")
 st.line_chart([data['local'] - 200, data['local'] - 100, data['local']])
 
 st.caption(f"آخر تحديث: {data['timestamp']}")
-
-time.sleep(3)
-st.rerun()
