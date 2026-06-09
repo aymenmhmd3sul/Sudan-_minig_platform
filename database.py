@@ -3,6 +3,7 @@ from sqlmodel import create_engine, Session
 
 # قراءة رابط قاعدة البيانات من المتغير البيئي الآمن في Render
 DATABASE_URL = os.getenv("DATABASE_URL")
+print("DB URL:", DATABASE_URL)
 
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     # تصحيح صيغة الرابط لتتوافق مع مكتبات SQLAlchemy الحديثة
