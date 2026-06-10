@@ -1,3 +1,4 @@
+from database import engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel, Session, select
@@ -13,7 +14,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SQLModel.metadata.create_all(database.engine)
 
 @app.get("/")
 def root():
@@ -21,7 +21,7 @@ def root():
 
 @app.get("/api/v1/market/items")
 def get_items():
-    with Session(database.engine) as session:
+    with Session(engine) as session:
         items = session.exec(select(models.MarketItem)).all()
         return items
 
@@ -34,3 +34,7 @@ def get_prices():
         "change": 0,
         "history": [114700, 114750, 114800, 114850]
     }
+
+@app.on_event("startup")
+def on_startup():
+    SQLModel.metadata.create_all(engine)
