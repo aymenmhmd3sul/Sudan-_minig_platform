@@ -1,23 +1,30 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 import models, database
 
 app = FastAPI(title="Mining API")
 
-@app.get("/")
-def root():
-    return {"status": "API running"}
+class RequestIn(BaseModel):
+    buyer_name: str
+    whatsapp: str
+    category: str
+    specs: str
 
-@app.get("/prices")
-def prices():
-    return {
-        "local": 114186,
-        "global": 75.56,
-        "status": "live"
-    }
-
-@app.get("/items")
-def items():
+@app.post('/request')
+def create_request(data: RequestIn):
     with Session(database.engine) as session:
-        return session.exec(select(models.MarketItem)).all()
+        req = models.BuyerRequest(
+            buyer_name=data.buyer_name,
+            whatsapp=data.whatsapp,
+            category=data.category,
+            specs=data.specs
+        )
+        session.add(req)
+        session.commit()
+        session.refresh(req)
+        return {'status': 'created', 'id': req.id}
+
+@app.get('/')
+def root():
+    return {'status': 'API running'}
