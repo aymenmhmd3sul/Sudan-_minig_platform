@@ -1,20 +1,16 @@
-from sqlmodel import SQLModel, Field
-from typing import Optional
+from sqlalchemy import Column, Integer, String, Float, Boolean, Text, create_engine
+from sqlalchemy.orm import declarative_base
 from datetime import datetime
 
+Base = declarative_base()
 
-class MarketItem(SQLModel, table=True):
-    __tablename__ = "market_items"
+class BuyerRequest(Base):
+    __tablename__ = 'buyer_requests'
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    title: str
-    category: str
-    description: str
-    location: Optional[str] = None
-    price: Optional[float] = None
-    status: str = Field(default="active")
-    contact_locked: bool = Field(default=True)
-
-    created_at: str = Field(
-        default_factory=lambda: datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    )
+    id = Column(Integer, primary_key=True)
+    buyer_name = Column(String)
+    whatsapp = Column(String)
+    category = Column(String)
+    specs = Column(Text)
+    status = Column(String, default='new')
+    created_at = Column(String, default=str(datetime.utcnow()))
