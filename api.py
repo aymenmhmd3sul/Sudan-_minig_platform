@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from sqlmodel import Session, select
+from sqlalchemy.orm import Session
+from sqlalchemy import select
 import models, database
 
 app = FastAPI(title="Mining API")

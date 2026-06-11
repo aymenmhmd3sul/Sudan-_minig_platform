@@ -5,11 +5,14 @@ from models import Base
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+if not DATABASE_URL:
+    DATABASE_URL = 'sqlite:///local.db'
+
+if DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
 connect_args = {}
-if DATABASE_URL and 'postgresql' in DATABASE_URL:
+if 'postgresql' in DATABASE_URL:
     connect_args = {'sslmode': 'require'}
 
 engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)
