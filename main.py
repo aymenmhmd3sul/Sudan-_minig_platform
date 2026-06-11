@@ -2,7 +2,10 @@ from database import engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel, Session, select
-import models, database
+try:
+    from patch_streamlit import patch_streamlit_ctx
+except ImportError:
+    patch_streamlit_ctx = None
 
 app = FastAPI(title="Sudan Mining Hub API", version="1.0")
 
