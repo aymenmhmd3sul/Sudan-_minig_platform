@@ -12,7 +12,16 @@ class BuyerRequest(Base):
     whatsapp = Column(String)
     category = Column(String)
     specs = Column(Text)
+
     status = Column(String, default='new')
+
+    buyer_confirmed = Column(Boolean, default=False)
+    trader_confirmed = Column(Boolean, default=False)
+
+    is_heavy_deal = Column(Boolean, default=False)
+    manual_override = Column(Boolean, default=False)
+    estimated_value = Column(String, nullable=True)
+
     created_at = Column(String, default=str(datetime.utcnow()))
 
 class Trader(Base):
@@ -21,7 +30,7 @@ class Trader(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     whatsapp = Column(String)
-    specialties = Column(String)  # مثال: "بوكلين,لودر"
+    specialties = Column(String)
     code = Column(String)
     created_at = Column(String, default=str(datetime.utcnow()))
 
@@ -35,6 +44,3 @@ class TraderOffer(Base):
     details = Column(Text)
     status = Column(String, default='active')
     created_at = Column(String, default=str(datetime.utcnow()))
-
-contact_locked = Column(Boolean, default=True)
-agreed_price = Column(String, nullable=True)
