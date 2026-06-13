@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(title="Sudan Mining Hub API")
 
-@app.get("/api/v1/market/items")
-def get_items():
-    return {"status": "API IS RUNNING WITHOUT DB"}
+@app.get("/")
+def root():
+    return {"status": "running"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
