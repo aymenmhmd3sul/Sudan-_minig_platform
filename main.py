@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
-import models
 import database
+import models
 
 app = FastAPI()
 
@@ -10,13 +10,16 @@ def get_items():
     try:
         with Session(database.engine) as session:
             items = session.query(models.MarketItem).all()
-            return [
-                {
-                    "id": x.id,
-                    "price": getattr(x, "price", None),
-                    "status": getattr(x, "status", None)
-                }
-                for x in items
-            ]
+            return {
+                "count": len(items),
+                "data": [
+                    {
+                        "id": i.id,
+                        "price": getattr(i, "price", None),
+                        "status": getattr(i, "status", None)
+                    }
+                    for i in items
+                ]
+            }
     except Exception as e:
         return {"error": str(e)}
