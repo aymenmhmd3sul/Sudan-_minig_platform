@@ -4,32 +4,31 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 import models, database
-from database import SessionLocal
+from database import engine
 from services.classification_service import classify_deal
 
-app = FastAPI(title="Mining Smart API")
+app = FastAPI(title="Sudan Mining Hub API")
 
-# ================= CORE =================
-
+# ================= ROOT =================
 @app.get("/")
 def root():
-    return {"status": "API running Smart Version"}
+    return {"status": "running"}
 
+# ================= PRICES =================
 @app.get("/api/v1/prices")
 def prices():
     return {
-        "local": 114186,
-        "global": 75.56,
+        "local_price": 114000,
+        "global_price": 75.56,
         "status": "live"
     }
 
 # ================= MARKET =================
-
 @app.get("/api/v1/market/items")
-def items():
+def get_items():
     try:
-        with SessionLocal() as session:
-            data = session.query(models.TraderOffer).all()
+        with Session(engine) as session:
+            items = session.query(models.MarketItem).all()
             return [
                 {
                     "id": x.id,
@@ -39,13 +38,12 @@ def items():
                     "details": x.details,
                     "status": x.status
                 }
-                for x in data
+                for x in items
             ]
     except Exception as e:
         return {"error": str(e)}
 
 # ================= REQUEST =================
-
 class RequestIn(BaseModel):
     buyer_name: str
     whatsapp: str
@@ -55,8 +53,7 @@ class RequestIn(BaseModel):
 
 @app.post("/api/v1/request")
 def create_request(data: RequestIn):
-    with SessionLocal() as session:
-
+    with Session(engine) as session:
         req = models.BuyerRequest(
             buyer_name=data.buyer_name,
             whatsapp=data.whatsapp,
@@ -79,13 +76,12 @@ def create_request(data: RequestIn):
         }
 
 # ================= COMMISSION =================
-
 class CommissionCalc(BaseModel):
     request_id: int
 
 @app.post("/api/v1/commission")
 def commission(data: CommissionCalc):
-    with SessionLocal() as session:
+    with Session(engine) as session:
         req = session.get(models.BuyerRequest, data.request_id)
 
         if not req:
