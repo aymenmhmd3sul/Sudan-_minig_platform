@@ -2,7 +2,7 @@ import models
 from database import engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import SQLModel, Session, select
+from sqlmodel import SQLModel, select
 try:
     from patch_streamlit import patch_streamlit_ctx
 except ImportError:
