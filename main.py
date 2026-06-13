@@ -9,18 +9,11 @@ app = FastAPI()
 def get_items():
     try:
         with Session(database.engine) as session:
-            items = session.query(models.MarketItem).all()
+            items = session.execute(models.MarketItem.__table__.select()).fetchall()
 
             return {
                 "count": len(items),
-                "data": [
-                    {
-                        "id": i.id,
-                        "price": getattr(i, "price", None),
-                        "status": getattr(i, "status", None)
-                    }
-                    for i in items
-                ]
+                "data": [dict(i._mapping) for i in items]
             }
 
     except Exception as e:
