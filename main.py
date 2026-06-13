@@ -1,20 +1,15 @@
 from fastapi import FastAPI
-from sqlalchemy import text
 import database
+import models
 
 app = FastAPI()
 
 @app.get("/api/v1/market/items")
 def get_items():
     try:
-        with database.engine.connect() as conn:
-            result = conn.execute(text("SELECT * FROM market_items"))
-            rows = result.fetchall()
-
-            return {
-                "count": len(rows),
-                "data": [dict(row._mapping) for row in rows]
-            }
-
+        return {
+            "models_loaded": str(models.MarketItem),
+            "table": str(models.MarketItem.__table__)
+        }
     except Exception as e:
-        return {"error": str(e)}
+        return {"startup_error": str(e)}
