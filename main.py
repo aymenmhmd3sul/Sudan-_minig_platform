@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from sqlalchemy.orm import Session
 import database
 import models
 
@@ -8,8 +7,8 @@ app = FastAPI()
 @app.get("/api/v1/market/items")
 def get_items():
     try:
-        with Session(database.engine) as session:
-            items = session.execute(models.MarketItem.__table__.select()).fetchall()
+        with database.SessionLocal() as session:
+            items = session.exec(models.MarketItem.__table__.select()).fetchall()
 
             return {
                 "count": len(items),
