@@ -8,8 +8,6 @@ from services.classification_service import classify_deal
 
 app = FastAPI(title="Mining Smart API")
 
-# ================= CORE =================
-
 @app.get("/")
 def root():
     return {"status": "API running Smart Version"}
@@ -22,26 +20,24 @@ def prices():
         "status": "live"
     }
 
-# ================= MARKET =================
-
 @app.get("/api/v1/market/items")
 def items():
-    with Session(database.engine) as session:
-        items = session.query(models.TraderOffer).all()
-
-        return [
-            {
-                "id": i.id,
-                "request_id": i.request_id,
-                "trader_id": i.trader_id,
-                "price": i.price,
-                "details": i.details,
-                "status": i.status
-            }
-            for i in items
-        ]
-
-# ================= REQUEST SYSTEM =================
+    try:
+        with Session(database.engine) as session:
+            data = session.query(models.TraderOffer).all()
+            return [
+                {
+                    "id": x.id,
+                    "request_id": x.request_id,
+                    "trader_id": x.trader_id,
+                    "price": x.price,
+                    "details": x.details,
+                    "status": x.status
+                }
+                for x in data
+            ]
+    except Exception as e:
+        return {"error": str(e)}
 
 class RequestIn(BaseModel):
     buyer_name: str
@@ -74,8 +70,6 @@ def create_request(data: RequestIn):
             "estimated_value": req.estimated_value,
             "images": data.images
         }
-
-# ================= COMMISSION SYSTEM =================
 
 class CommissionCalc(BaseModel):
     request_id: int
