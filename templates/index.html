@@ -8,81 +8,50 @@
 <style>
 body {
     margin:0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #0f172a, #020617);
+    font-family: Arial;
+    background:#0b1220;
     color:white;
 }
 
-/* Top Bar */
+/* Top bar */
 .header {
     display:flex;
     justify-content:space-between;
-    padding:18px 25px;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(12px);
-    border-bottom:1px solid rgba(255,255,255,0.08);
+    padding:16px 20px;
+    background:#111827;
 }
 
-.logo {
-    font-weight:bold;
-    color:#facc15;
-}
-
-/* Hero Price */
+/* Price hero */
 .hero {
     text-align:center;
-    padding:60px 20px 30px;
+    padding:40px 20px;
 }
 
 .price {
-    font-size:70px;
-    font-weight:bold;
+    font-size:60px;
     color:#22c55e;
-}
-
-.sub {
-    color:#94a3b8;
-    margin-top:8px;
+    font-weight:bold;
 }
 
 /* Grid */
 .grid {
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:16px;
-    padding:20px 30px;
+    gap:15px;
+    padding:20px;
 }
 
 .card {
-    background: rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.1);
-    border-radius:16px;
-    padding:20px;
-    transition:0.3s;
-    backdrop-filter: blur(10px);
+    background:#1f2937;
+    padding:18px;
+    border-radius:12px;
+    border:1px solid #2b3648;
 }
 
-.card:hover {
-    transform: translateY(-6px);
-    background: rgba(255,255,255,0.12);
-}
-
-.card h3 {
-    margin:0 0 10px 0;
-    color:#f8fafc;
-}
-
-.card p {
+/* status */
+.status {
     color:#94a3b8;
-}
-
-/* Footer */
-.footer {
-    text-align:center;
-    padding:25px;
-    color:#64748b;
-    margin-top:20px;
-    border-top:1px solid rgba(255,255,255,0.08);
+    margin-top:10px;
 }
 </style>
 </head>
@@ -90,47 +59,51 @@ body {
 <body>
 
 <div class="header">
-    <div class="logo">🟡 Sudan Mining Hub</div>
-    <div>LIVE MARKET</div>
+    <div>🟡 Sudan Mining Hub</div>
+    <div id="status">LIVE</div>
 </div>
 
 <div class="hero">
-    <div class="price">{{ gold_price }}</div>
-    <div class="sub">Gold Price (USD per ounce)</div>
+    <div class="price" id="gold">Loading...</div>
+    <div class="status">Live Gold Price (USD)</div>
 </div>
 
 <div class="grid">
-
     <div class="card">
         <h3>📦 Orders</h3>
-        <p>Manage buy & sell requests</p>
+        <p>Buy & Sell Requests</p>
     </div>
 
     <div class="card">
         <h3>👤 Traders</h3>
-        <p>Network overview</p>
+        <p>Network Status</p>
     </div>
 
     <div class="card">
         <h3>⛏️ Mining</h3>
-        <p>Equipment & resources</p>
+        <p>Equipment Data</p>
     </div>
 
     <div class="card">
         <h3>📢 Ads</h3>
-        <p>Market promotions</p>
+        <p>Market Promotions</p>
     </div>
-
-    <div class="card">
-        <h3>💳 Subscription</h3>
-        <p>3000 SDG / month</p>
-    </div>
-
 </div>
 
-<div class="footer">
-Sudan Mining Hub • Professional Mining Intelligence Platform
-</div>
+<script>
+async function loadPrice(){
+    try {
+        const res = await fetch("/api/v1/gold-price");
+        const data = await res.json();
+        document.getElementById("gold").innerText = data.gold_usd;
+    } catch (e) {
+        document.getElementById("gold").innerText = "Error";
+    }
+}
+
+loadPrice();
+setInterval(loadPrice, 5000);
+</script>
 
 </body>
 </html>
