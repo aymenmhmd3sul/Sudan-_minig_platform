@@ -1,20 +1,22 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from services.gold_service import get_gold_price
 from services.market_core import get_items
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
 
 
-def safe_gold():
+def safe_price():
     try:
         data = get_gold_price()
-        if not isinstance(data, dict):
-            return 2335.50
-        return float(data.get("gold_usd") or 2335.50)
+
+        if isinstance(data, dict):
+            val = data.get("gold_usd")
+            if val is not None:
+                return float(val)
+
+        return float(data)
     except Exception:
         return 2335.50
 
@@ -31,23 +33,27 @@ def health():
 
 @app.get("/api/v1/gold-price")
 def gold_price():
-    price = safe_gold()
     return {
         "status": "success",
-        "gold_usd": price
+        "gold_usd": safe_price()
     }
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
-    price = safe_gold()
+    price = safe_price()
 
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "gold_price": price,
-        "gold_usd": price,
-        "status": "live"
-    })
+    html = f"""
+    <html>
+    <body>
+        <h1>Sudan Mining Hub</h1>
+        <h2>Gold Price: {price}</h2>
+        <p>Status: live</p>
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html)
 
 
 @app.get("/api/v1/market/items")
