@@ -1,22 +1,118 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sudan Mining Hub</title>
+
+<style>
+body {
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at top, #0f172a, #020617);
+    color:white;
+}
+
+/* Header */
+.header {
+    padding:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+}
+
+.logo {
+    font-weight:bold;
+    color:#facc15;
+}
+
+/* Hero */
+.hero {
+    text-align:center;
+    padding:70px 20px;
+}
+
+.price {
+    font-size:64px;
+    font-weight:bold;
+    color:#22c55e;
+}
+
+.sub {
+    color:#94a3b8;
+    margin-top:10px;
+}
+
+/* Grid */
+.grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:15px;
+    padding:20px;
+}
+
+.card {
+    background: rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;
+    padding:20px;
+    transition:0.25s;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    background: rgba(255,255,255,0.12);
+}
+
+.footer {
+    text-align:center;
+    padding:20px;
+    color:#64748b;
+    margin-top:30px;
+}
+</style>
 </head>
 
 <body>
 
-<div>
-<h1>🟡 Sudan Mining Hub</h1>
+<div class="header">
+    <div class="logo">🟡 Sudan Mining Hub</div>
+    <div>LIVE</div>
 </div>
 
-<div>
-<h2>Gold Price: {{ gold_price }}</h2>
+<div class="hero">
+    <div class="price">{{ gold_price }}</div>
+    <div class="sub">Gold Price (USD / oz)</div>
 </div>
 
-<div>
-<p>Status: {{ status }}</p>
+<div class="grid">
+
+<div class="card">
+<h3>📦 Orders</h3>
+<p>Manage trades</p>
+</div>
+
+<div class="card">
+<h3>👤 Traders</h3>
+<p>Network</p>
+</div>
+
+<div class="card">
+<h3>⛏️ Mining</h3>
+<p>Resources</p>
+</div>
+
+<div class="card">
+<h3>📊 Analytics</h3>
+<p>Market insights</p>
+</div>
+
+</div>
+
+<div class="footer">
+Sudan Mining Hub • Live Market System
 </div>
 
 </body>
