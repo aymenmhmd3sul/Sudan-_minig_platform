@@ -9,18 +9,18 @@
 body {
     margin:0;
     font-family: Arial, sans-serif;
-    background: radial-gradient(circle at top, #0f172a, #020617);
+    background: linear-gradient(135deg, #0f172a, #020617);
     color:white;
 }
 
-/* Header */
+/* Top Bar */
 .header {
-    padding:18px;
     display:flex;
     justify-content:space-between;
-    align-items:center;
+    padding:18px 25px;
     background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
 }
 
 .logo {
@@ -28,29 +28,29 @@ body {
     color:#facc15;
 }
 
-/* Hero */
+/* Hero Price */
 .hero {
     text-align:center;
-    padding:70px 20px;
+    padding:60px 20px 30px;
 }
 
 .price {
-    font-size:64px;
+    font-size:70px;
     font-weight:bold;
     color:#22c55e;
 }
 
 .sub {
     color:#94a3b8;
-    margin-top:10px;
+    margin-top:8px;
 }
 
 /* Grid */
 .grid {
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-    gap:15px;
-    padding:20px;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:16px;
+    padding:20px 30px;
 }
 
 .card {
@@ -58,7 +58,8 @@ body {
     border:1px solid rgba(255,255,255,0.1);
     border-radius:16px;
     padding:20px;
-    transition:0.25s;
+    transition:0.3s;
+    backdrop-filter: blur(10px);
 }
 
 .card:hover {
@@ -66,11 +67,22 @@ body {
     background: rgba(255,255,255,0.12);
 }
 
+.card h3 {
+    margin:0 0 10px 0;
+    color:#f8fafc;
+}
+
+.card p {
+    color:#94a3b8;
+}
+
+/* Footer */
 .footer {
     text-align:center;
-    padding:20px;
+    padding:25px;
     color:#64748b;
-    margin-top:30px;
+    margin-top:20px;
+    border-top:1px solid rgba(255,255,255,0.08);
 }
 </style>
 </head>
@@ -79,40 +91,45 @@ body {
 
 <div class="header">
     <div class="logo">🟡 Sudan Mining Hub</div>
-    <div>LIVE</div>
+    <div>LIVE MARKET</div>
 </div>
 
 <div class="hero">
     <div class="price">{{ gold_price }}</div>
-    <div class="sub">Gold Price (USD / oz)</div>
+    <div class="sub">Gold Price (USD per ounce)</div>
 </div>
 
 <div class="grid">
 
-<div class="card">
-<h3>📦 Orders</h3>
-<p>Manage trades</p>
-</div>
+    <div class="card">
+        <h3>📦 Orders</h3>
+        <p>Manage buy & sell requests</p>
+    </div>
 
-<div class="card">
-<h3>👤 Traders</h3>
-<p>Network</p>
-</div>
+    <div class="card">
+        <h3>👤 Traders</h3>
+        <p>Network overview</p>
+    </div>
 
-<div class="card">
-<h3>⛏️ Mining</h3>
-<p>Resources</p>
-</div>
+    <div class="card">
+        <h3>⛏️ Mining</h3>
+        <p>Equipment & resources</p>
+    </div>
 
-<div class="card">
-<h3>📊 Analytics</h3>
-<p>Market insights</p>
-</div>
+    <div class="card">
+        <h3>📢 Ads</h3>
+        <p>Market promotions</p>
+    </div>
+
+    <div class="card">
+        <h3>💳 Subscription</h3>
+        <p>3000 SDG / month</p>
+    </div>
 
 </div>
 
 <div class="footer">
-Sudan Mining Hub • Live Market System
+Sudan Mining Hub • Professional Mining Intelligence Platform
 </div>
 
 </body>
