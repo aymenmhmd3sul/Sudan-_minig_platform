@@ -1,29 +1,17 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-
-from services.gold_service import get_gold_price
-from services.market_core import get_items
+import requests
 
 app = FastAPI()
 
+BINANCE_URL = "https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT"
 
-def safe_price():
+def get_price():
     try:
-        data = get_gold_price()
-
-        if isinstance(data, dict):
-            val = data.get("gold_usd")
-            if val is not None:
-                return float(val)
-
-        return float(data)
-    except Exception:
-        return 2335.50
-
-
-@app.get("/")
-def root():
-    return {"status": "API running"}
+        r = requests.get(BINANCE_URL, timeout=5)
+        return float(r.json()["price"])
+    except:
+        return 2335.0
 
 
 @app.get("/health")
@@ -35,30 +23,63 @@ def health():
 def gold_price():
     return {
         "status": "success",
-        "gold_usd": safe_price()
+        "gold_usd": get_price()
     }
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request):
-    price = safe_price()
+def dashboard():
+    price = get_price()
 
-    html = f"""
-    <html>
-    <body>
-        <h1>Sudan Mining Hub</h1>
-        <h2>Gold Price: {price}</h2>
-        <p>Status: live</p>
-    </body>
-    </html>
-    """
+    return f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sudan Mining Hub</title>
+    <meta charset="UTF-8">
 
-    return HTMLResponse(content=html)
+    <style>
+        body {{
+            margin:0;
+            font-family: Arial;
+            background:#0b1220;
+            color:white;
+            text-align:center;
+        }}
 
+        .box {{
+            margin-top:80px;
+        }}
 
-@app.get("/api/v1/market/items")
-def market_items():
-    try:
-        return {"status": "success", "data": get_items()}
-    except Exception:
-        return {"status": "success", "data": []}
+        .title {{
+            font-size:28px;
+            margin-bottom:20px;
+        }}
+
+        .price {{
+            font-size:64px;
+            color:#22c55e;
+            font-weight:bold;
+        }}
+
+        .card {{
+            margin-top:40px;
+            display:inline-block;
+            padding:20px;
+            background:#1f2937;
+            border-radius:12px;
+        }}
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+    <div class="title">🟡 Sudan Mining Hub</div>
+    <div class="price">{price}</div>
+    <div class="card">Live Gold Price (USD)</div>
+</div>
+
+</body>
+</html>
+"""
