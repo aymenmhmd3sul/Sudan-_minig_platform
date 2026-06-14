@@ -11,7 +11,7 @@ def get_price():
         r = requests.get(BINANCE_URL, timeout=5)
         return float(r.json()["price"])
     except:
-        return 2335.0
+        return 2333.0
 
 
 @app.get("/health")
@@ -45,24 +45,21 @@ body {{
 }}
 
 .container {{
-    max-width:1100px;
+    max-width:1000px;
     margin:auto;
     padding:15px;
 }}
 
 .header {{
     text-align:center;
-    padding:20px;
-    font-size:22px;
-    font-weight:bold;
+    padding:18px;
     background:#111827;
-    border-radius:10px;
-    margin-top:10px;
+    border-radius:12px;
 }}
 
 .price {{
     text-align:center;
-    font-size:48px;
+    font-size:50px;
     color:#22c55e;
     margin:20px 0;
 }}
@@ -75,23 +72,40 @@ body {{
 
 .card {{
     background:#1f2937;
-    padding:18px;
+    padding:20px;
     border-radius:12px;
     text-align:center;
+    cursor:pointer;
     transition:0.2s;
 }}
 
 .card:hover {{
-    transform:scale(1.03);
-    background:#273449;
+    transform:scale(1.05);
+    background:#2b3a52;
 }}
 
-.footer {{
+.modal {{
+    display:none;
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.7);
+}}
+
+.modal-content {{
+    background:#111827;
+    margin:15% auto;
+    padding:20px;
+    width:80%;
+    border-radius:12px;
     text-align:center;
-    margin-top:20px;
-    padding:15px;
-    color:#94a3b8;
-    font-size:13px;
+}}
+
+.close {{
+    color:red;
+    float:left;
+    font-size:22px;
+    cursor:pointer;
 }}
 </style>
 </head>
@@ -100,23 +114,40 @@ body {{
 
 <div class="container">
 
-<div class="header">🟡 لوحة السودان للتعدين</div>
+<div class="header">🟡 Sudan Mining Hub</div>
 
 <div class="price">{price} USD</div>
 
 <div class="grid">
 
-<div class="card">📦 الطلبات</div>
-<div class="card">👤 التجار</div>
-<div class="card">⛏️ التعدين</div>
-<div class="card">📢 الإعلانات</div>
-<div class="card">💳 الاشتراك</div>
+<div class="card" onclick="openModal('الطلبات')">📦 الطلبات</div>
+<div class="card" onclick="openModal('التجار')">👤 التجار</div>
+<div class="card" onclick="openModal('التعدين')">⛏️ التعدين</div>
+<div class="card" onclick="openModal('الإعلانات')">📢 الإعلانات</div>
+<div class="card" onclick="openModal('الاشتراك')">💳 الاشتراك</div>
 
 </div>
 
-<div class="footer">منصة سودان للتعدين - نظام مباشر</div>
-
 </div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">✖</span>
+    <h2 id="modalTitle"></h2>
+    <p>هذه نافذة تفاعلية — سيتم ربطها بالبيانات لاحقاً</p>
+  </div>
+</div>
+
+<script>
+function openModal(title){
+    document.getElementById('modalTitle').innerText = title;
+    document.getElementById('modal').style.display = 'block';
+}
+
+function closeModal(){
+    document.getElementById('modal').style.display = 'none';
+}
+</script>
 
 </body>
 </html>
